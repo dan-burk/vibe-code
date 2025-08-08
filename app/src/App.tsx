@@ -72,9 +72,10 @@ Usage count: ${usageCount + 1}/2 requests used.`)
       language={language}
       setLanguage={setLanguage}
     >
-      <div className="flex flex-1 gap-4 p-4 max-w-7xl mx-auto w-full">
+      {/* Main content container with constrained height */}
+      <div className="flex flex-1 gap-6 p-6 max-w-6xl mx-auto w-full">
         {/* Input Panel - Left Side */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 max-w-lg">
           <InputPanel
             input={input}
             setInput={setInput}
@@ -85,7 +86,7 @@ Usage count: ${usageCount + 1}/2 requests used.`)
         </div>
 
         {/* Output Panel - Right Side */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 max-w-lg">
           <OutputPanel
             output={output}
             isLoading={isLoading}

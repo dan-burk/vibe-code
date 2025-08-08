@@ -27,15 +27,15 @@ export default function InputPanel({ input, setInput, onSubmit, isLoading, langu
   const submitText = language === 'es' ? 'Enviar' : 'Submit'
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-[500px] flex flex-col bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       <div className="mb-4">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
           {language === 'es' ? 'Entrada' : 'Input'}
         </h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
           {language === 'es' 
-            ? 'Escribe tu pregunta y presiona enviar para obtener una respuesta de IA.'
-            : 'Type your question and press submit to get an AI response.'
+            ? 'Escribe tu pregunta y presiona enviar.'
+            : 'Type your question and press submit.'
           }
         </p>
       </div>
@@ -47,20 +47,20 @@ export default function InputPanel({ input, setInput, onSubmit, isLoading, langu
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            className="w-full h-full min-h-[200px] p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-colors"
+            className="w-full h-full min-h-[280px] max-h-[320px] p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-colors text-sm"
             disabled={isLoading}
           />
         </div>
 
         <div className="flex justify-between items-center">
           <div className="text-xs text-gray-500 dark:text-gray-400">
-            {language === 'es' ? 'Presiona Cmd/Ctrl + Enter para envío rápido' : 'Press Cmd/Ctrl + Enter for quick submit'}
+            {language === 'es' ? 'Cmd/Ctrl + Enter' : 'Cmd/Ctrl + Enter'}
           </div>
           
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center space-x-2"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center space-x-2 text-sm"
           >
             {isLoading ? (
               <>
