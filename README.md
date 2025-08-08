@@ -110,48 +110,27 @@ Add **ALL** files from your app folder to the Claude Project context, including:
 - All React component files (`.tsx`, `.ts`)
 - All styling files (`.css`, `.scss`)
 - Configuration files (`package.json`, `vite.config.ts`, etc.)
-- **`app_structure.txt`** ⚠️ **CRITICAL** - This file is the backbone of organization
-
-### Why app_structure.txt is Essential
-
-The `app_structure.txt` file is **very very important** because it:
-- Shows the LLM how all files interact with each other
-- Defines what folders each file lives in
-- Maintains project organization consistency
-- Serves as the reference point for all future development
+- **`app_structure.txt`** ⚠️ **CRITICAL** - This file is the backbone of organization. Shows the LLM how all files interact with each other.
 
 
-### Important Tip: Context Management
-
-⚠️ **Context management is key** to successful development:
-- **Keep your Claude Project updated** with the most recent files
-- **Create new chats frequently** within the same project to avoid weird rabbit holes
-- Fresh conversations help maintain focus and prevent confusion
-
-## Next Steps
+## Step 5: Iterate on React Prototype
 
 Once your development server is running, version control is set up, and your Claude Project is configured, you can begin iterating on your React prototype.
 
 ### Iteration Process
 
-1. Make changes to your React prototype
+1. Prompt Claude to make changes to your React prototype
 2. Test locally with `npm run dev`
 3. Update `app_structure.txt` if new files are created
 4. Upload any new files to Claude Project context
 5. Continue iterating with Claude's help
 
-### Development Guidelines
+### Important Tip: Context Management
 
-- **Focus on frontend functionality first**
-- **Keep implementations simple for initial demo**
-- **Build backend integration later**
-- **Add Firebase auth as a final step**
-
-### Critical: Maintain app_structure.txt
-
-⚠️ **IMPORTANT:** When creating new files during development:
-1. Add the new files to your Claude Project context
-2. **Update `app_structure.txt`** to reflect the new file locations and purposes
-3. This maintains the backbone of organization that Claude needs to understand your project
+- **Tell Claude to give you FULL CODE files** This helps for copy-paste into VSCode.
+- **Use the Changes to double check Claude** This helps to see if Claude is freaking out
+- **Keep your Claude Project updated** with the most recent files
+- **Commit to GitHub frequently** think of this as saving your work
+- **Create new chats frequently** within the same project to avoid weird rabbit holes. Fresh conversations help maintain focus and prevent confusion
 
 
