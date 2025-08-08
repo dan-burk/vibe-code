@@ -3,8 +3,10 @@ import Layout from './components/layout/Layout'
 import InputPanel from './components/ui/InputPanel'
 import OutputPanel from './components/ui/OutputPanel'
 import UsageIndicator from './components/ui/UsageIndicator'
+import LandingPage from './components/ui/LandingPage'
 
 function App() {
+  const [showLanding, setShowLanding] = useState(true)
   const [input, setInput] = useState('')
   const [output, setOutput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -25,6 +27,12 @@ function App() {
       setIsDarkMode(true)
       document.documentElement.classList.add('dark')
     }
+
+    // Check if user has used the app before
+    const hasUsedApp = localStorage.getItem('has_used_app')
+    if (hasUsedApp) {
+      setShowLanding(false)
+    }
   }, [])
 
   const toggleDarkMode = () => {
@@ -36,6 +44,11 @@ function App() {
       document.documentElement.classList.remove('dark')
       localStorage.setItem('theme', 'light')
     }
+  }
+
+  const handleGetStarted = () => {
+    setShowLanding(false)
+    localStorage.setItem('has_used_app', 'true')
   }
 
   const handleSubmit = async () => {
@@ -65,6 +78,25 @@ Usage count: ${usageCount + 1}/2 requests used.`)
     }, 2000)
   }
 
+  // Show landing page
+  if (showLanding) {
+    return (
+      <Layout 
+        isDarkMode={isDarkMode} 
+        toggleDarkMode={toggleDarkMode}
+        language={language}
+        setLanguage={setLanguage}
+        isLanding={true}
+      >
+        <LandingPage 
+          onGetStarted={handleGetStarted}
+          language={language}
+        />
+      </Layout>
+    )
+  }
+
+  // Show main app
   return (
     <Layout 
       isDarkMode={isDarkMode} 

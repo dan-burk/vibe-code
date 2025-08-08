@@ -1,4 +1,4 @@
-import { Moon, Sun, Globe, Menu } from 'lucide-react'
+import { Moon, Sun, Globe, Menu, Home } from 'lucide-react'
 import { useState } from 'react'
 
 interface HeaderProps {
@@ -10,6 +10,11 @@ interface HeaderProps {
 
 export default function Header({ isDarkMode, toggleDarkMode, language, setLanguage }: HeaderProps) {
   const [showLanguageMenu, setShowLanguageMenu] = useState(false)
+
+  const handleHomeClick = () => {
+    localStorage.removeItem('has_used_app')
+    window.location.reload()
+  }
 
   return (
     <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
@@ -27,6 +32,15 @@ export default function Header({ isDarkMode, toggleDarkMode, language, setLangua
 
           {/* Navigation */}
           <div className="flex items-center space-x-4">
+            {/* Home Button */}
+            <button
+              onClick={handleHomeClick}
+              className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              title="Back to Home"
+            >
+              <Home className="w-5 h-5" />
+            </button>
+
             {/* Language Selector */}
             <div className="relative">
               <button

@@ -8,6 +8,7 @@ interface LayoutProps {
   toggleDarkMode: () => void
   language: string
   setLanguage: (lang: string) => void
+  isLanding?: boolean
 }
 
 export default function Layout({ 
@@ -15,22 +16,25 @@ export default function Layout({
   isDarkMode, 
   toggleDarkMode, 
   language, 
-  setLanguage 
+  setLanguage,
+  isLanding = false
 }: LayoutProps) {
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 transition-colors">
-      <Header 
-        isDarkMode={isDarkMode}
-        toggleDarkMode={toggleDarkMode}
-        language={language}
-        setLanguage={setLanguage}
-      />
+      {!isLanding && (
+        <Header 
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
+          language={language}
+          setLanguage={setLanguage}
+        />
+      )}
       
-      <main className="flex-1 flex flex-col">
+      <main className={`flex-1 flex flex-col ${isLanding ? '' : 'pt-0'}`}>
         {children}
       </main>
       
-      <Footer />
+      {!isLanding && <Footer />}
     </div>
   )
 }

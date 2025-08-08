@@ -16,7 +16,8 @@ app/
 │   │   │   ├── InputPanel.tsx
 │   │   │   ├── OutputPanel.tsx
 │   │   │   ├── LoadingSpinner.tsx
-│   │   │   └── UsageIndicator.tsx
+│   │   │   ├── UsageIndicator.tsx
+│   │   │   └── LandingPage.tsx      # Hero landing page component
 │   │   ├── history/
 │   │   │   └── HistoryPanel.tsx
 │   │   ├── payment/                # (Placeholders for future payment components)
