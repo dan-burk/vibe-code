@@ -1,0 +1,30 @@
+{
+  "prototype_requirements_addendum": {
+    "ui_description": {
+      "style_inspiration": "RTutor.ai, Julius.ai, DeepNote",
+      "layout": {
+        "input_panel": "Left side, text area where user enters a prompt. Allow for multiple languages (e.g., English, Spanish)",
+        "output_panel": "Right side, shows AI-generated output",
+        "header": "Clean header with branding and optional login/logout button",
+        "footer": "Basic footer with contact/info (optional)"
+      },
+      "device_responsiveness": "Should work on desktop and mobile (basic responsiveness)",
+      "theme": "Simple, clean UI (light/dark mode), professional but minimal"
+    },
+    "user_flow": {
+      "step_1": "User lands on homepage and sees two-panel interface (input/output)",
+      "step_2": "User enters prompt and submits request",
+      "step_3": "Up to 2 responses are allowed before login is required",
+      "step_4": "On 3rd request, user is shown a Firebase-powered login modal",
+      "step_5": "After login, user may continue using app with expanded limits",
+      "step_6": "Each request is routed through a GCP Cloud Function backend that checks Firebase ID token"
+    },
+    "stretch_goals": {
+      "1": "Add history tab to show previous inputs/outputs per user",
+      "2": "Add rate limiting / usage quotas to encourage upgrade",
+      "3": "Store user profiles and preferences in Firestore",
+      "4": "Add share/export output functionality (e.g., copy to clipboard or download)",
+      "5": "UI polish: loading animations, error messages, etc."
+    }
+  }
+}

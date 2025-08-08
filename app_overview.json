@@ -1,0 +1,115 @@
+{
+  "app": {
+    "name": "React + Firebase AI Assistant",
+    "description": "A web app built in ReactJS that allows unauthenticated users to make limited API calls, then prompts them to log in using Firebase Auth. The backend is built using serverless Google Cloud Functions, protected by Firebase ID tokens. Data is stored in Firebase Firestore.",
+    "goals": [
+      "Create a scalable, low-cost prototype",
+      "Use a custom domain purchased from GoDaddy called mycoolapp.com",
+      "Limit access to backend API calls until user logs in",
+      "Support anonymous and authenticated usage",
+      "Integrate OpenAI API calls from a protected backend",
+      "Use React on the frontend with minimal hosting setup"
+    ]
+  },
+  "frontend": {
+    "framework": "ReactJS",
+    "hosting": "Firebase Hosting",
+    "login_flow": {
+      "pre_login_limit": 2,
+      "auth_prompt_after_limit": true,
+      "tracking_method": ["localStorage", "anonymous Firebase UID"]
+    },
+    "deployment": {
+      "git_repo": "GitHub",
+      "auto_deploy": true,
+      "build_command": "npm run build"
+    }
+  },
+  "auth": {
+    "provider": "Firebase Auth",
+    "methods": ["Google", "Email/Password", "Anonymous", "Microsoft", "Facebook"],
+    "integration": "Firebase SDK in React",
+    "login_UI": {
+      "uses_firebase_ui": true,
+      "customizable": true,
+      "looks_professional": true
+    },
+    "post_login": {
+      "get_token": "firebase.auth().currentUser.getIdToken()",
+      "send_to_backend": "Authorization: Bearer <ID_TOKEN>"
+    }
+  },
+  "backend": {
+    "platform": "Google Cloud Functions",
+    "language": "NodeJS",
+    "auth_strategy": "Function is public, but validates Firebase ID token",
+    "example_logic": [
+      "If request has valid Firebase ID token then allow request",
+      "If not logged in, allow up to 2 calls (via IP or anonymous UID)",
+      "After limit reached, return 403 and show login screen"
+    ],
+    "api_calls": [
+      {
+        "name": "askAI",
+        "integration": "OpenAI API",
+        "authentication_required": true,
+        "usage_limited": true
+      }
+    ]
+  },
+  "database": {
+    "type": "Firebase Firestore",
+    "usage": [
+      "Store user profiles",
+      "Track anonymous and logged-in usage counts",
+      "Save API call history",
+      "Store user messages"
+    ]
+  },
+  "domain": {
+    "provider": "GoDaddy",
+    "dns_setup": {
+      "pointing_to": "Firebase Hosting",
+      "using": "A/AAAA or CNAME records"
+    }
+  },
+  "rate_limiting": {
+    "anonymous": "Max 2 calls via IP, device ID, or localStorage",
+    "authenticated": "Rate limit by Firebase UID or upgrade tier"
+  },
+  "security": {
+    "function_access": "Public endpoint + Firebase ID token validation",
+    "sensitive_keys": "Only stored and used on backend (never in frontend)",
+    "user_data_access": "Firestore security rules by UID"
+  },
+  "Q&A_summary": [
+    {
+      "question": "Can I replace a weird Google URL with a custom domain?",
+      "answer": "Yes, point your GoDaddy domain to wherever your frontend is deployed (e.g., Firebase Hosting)."
+    },
+    {
+      "question": "Do I need a backend for secret API keys?",
+      "answer": "Yes, never store secrets in frontend. Use a backend (e.g., GCP Cloud Function) to safely handle OpenAI API calls."
+    },
+    {
+      "question": "Is Firebase good for auth + database + hosting?",
+      "answer": "Yes. Firebase is ideal for startups on a budget and gives you integrated tools for fast prototyping."
+    },
+    {
+      "question": "Can I protect a Google Cloud Function without making it public?",
+      "answer": "Not easily for frontend. The best practice is to make it public and validate the Firebase token inside."
+    },
+    {
+      "question": "Can Firebase limit usage before requiring login?",
+      "answer": "Yes. You can use anonymous auth, localStorage, or Cloud Function logic to limit pre-login usage."
+    },
+    {
+      "question": "Do Firebase Auth UIs look good?",
+      "answer": "Yes. FirebaseUI provides clean, responsive login screens and supports easy integration."
+    },
+    {
+      "question": "Can GitHub auto-deploy to Firebase?",
+      "answer": "Yes. Firebase Hosting supports GitHub-based CI/CD workflows for React apps."
+    }
+  ]
+}

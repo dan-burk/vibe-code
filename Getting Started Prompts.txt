@@ -1,0 +1,16 @@
+Step 1:
+Instructions: In Claude Project, upload app_overview.json, app_requirements.json, & app_structure.txt.
+Prompt:
+The goal is to make a React Prototype given the following documentation & then slowly build from there. We will figure out the specs as we go. We will focus on front end before even trying build backend. We will focus on frontend app before firebase auth implementation.
+
+Your job is to write me code for distinct files as shown in the app_requirements.txt. 
+IF IN DOUBT MAKE THE CODE SIMPLE! WE WANT THE DEMO TO WORK!
+
+Post Prompt: You'll need to let Claude do its thing and hit "Continue" when It rate limits. It will run for a while making all your code files. Your job is to copy and paste them to your respective folder! The file names may not match that of the app_structure.txt. If you download the files (and don't copy paste), You need to make sure the file types and extensions are correct. This whole first step is vital to making a sound base for your project. (Example main_tsx.tsx needs to be main.tsx, globals_css.css needs to be globals.css, input_panel_tsx.ts needs to be InputPanel.tsx). If a file is missing, ask for it in a followup prompt.
+
+
+Step 2: From the command prompt within VSCode run: npm install, then npm run dev
+(Example:
+	PS C:\Users\Daniel Burkhalter\OneDrive\RTutor\Proj_Aurthur_Vibe_Code\app> npm install
+	PS C:\Users\Daniel Burkhalter\OneDrive\RTutor\Proj_Aurthur_Vibe_Code\app> npm run dev
+)

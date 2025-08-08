@@ -1,0 +1,69 @@
+app/
+├── public/                          # Static assets served by Vite
+│   ├── favicon.ico                  # App icon
+│   ├── dairy_translate_logo.png     # App logo
+│   └── robots.txt                   # SEO robots file
+├── src/                             # All application source code
+│   ├── components/                  # React components
+│   │   ├── auth/
+│   │   │   ├── LoginModal.tsx
+│   │   │   └── AuthButton.tsx
+│   │   ├── layout/
+│   │   │   ├── Header.tsx
+│   │   │   ├── Footer.tsx
+│   │   │   └── Layout.tsx
+│   │   ├── ui/
+│   │   │   ├── InputPanel.tsx
+│   │   │   ├── OutputPanel.tsx
+│   │   │   ├── LoadingSpinner.tsx
+│   │   │   └── UsageIndicator.tsx
+│   │   ├── history/
+│   │   │   └── HistoryPanel.tsx
+│   │   ├── payment/                # (Placeholders for future payment components)
+│   │   │   ├── 
+│   │   │   ├── 
+│   │   │   └── 
+│   │   └── modals/
+│   │       ├── ContactModal.tsx
+│   │       ├── PrivacyModal.tsx
+│   │       ├── TermsModal.tsx
+│   │       └── AboutModal.tsx
+│   ├── data/                        # data files (JSON, CSV, etc.)
+│   │   └──
+│   ├── services/                    # Business logic & API calls
+│   │   ├── firebase.ts
+│   │   └── auth.ts
+│   ├── hooks/                       # (Placeholders)
+│   │   ├──
+│   │   └──
+│   ├── types/                       # TypeScript type definitions
+│   │   ├── auth.ts
+│   │   └── components.ts
+│   ├── utils/                       # Helper functions & constants
+│   │   ├── constants.ts
+│   │   └── helpers.ts
+│   ├── App.tsx                      # Main app component
+│   ├── main.tsx                     # Vite entry point (was index.tsx)
+│   ├── globals.css                  # Global styles (Tailwind)
+│   └── vite-env.d.ts               # Vite environment types
+├── backend/                        # Backend (NOT Exist YET!)
+│   ├── functions/                  # Google Cloud Functions (Folder Not Exist Yet)
+│   │   ├── src/
+│   │   │   └── index.js            # Cloud Function code
+│   │   ├── package.json
+│   │   └── .env.example
+│   ├── firestore.rules             # Firestore security rules (Not Exist Yet)
+│   ├── firestore.indexes.json      # Database indexes (Not Exist Yet)
+│   └── firebase.json               # Firebase configuration (Not Exist Yet)
+├── index.html                      # Vite's HTML entry point (in root!)
+├── vite.config.ts                  # Vite configuration ✅
+├── tsconfig.json                   # TypeScript configuration ✅
+├── tsconfig.node.json              # TypeScript for Vite tooling ✅
+├── tailwind.config.js              # Tailwind CSS configuration ✅
+├── postcss.config.js               # PostCSS configuration ✅
+├── .env                            # Environment variables (not in git)
+├── .env.example                    # Example environment file
+├── .gitignore                      # Git ignore rules
+├── package.json                    # Dependencies & scripts
+├── app_structure.txt               # Project structure documentation
+└── README.md                       # Project documentation
