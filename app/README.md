@@ -20,6 +20,11 @@ A modern web application built with ReactJS and TypeScript that provides an AI a
 
 ## Quick Start
 
+**Navigate to the `app/` directory first:**
+   ```bash
+   cd app/
+   ```
+
 1. **Install dependencies**
    ```bash
    npm install
@@ -89,6 +94,36 @@ The UI is inspired by modern AI tools like:
 - RTutor.ai - Clean two-panel layout
 - Julius.ai - Professional styling
 - DeepNote - Interactive elements
+
+## GitHub Setup & Version Control
+
+### Initial Setup (Private Repo)
+
+1. **Create GitHub repo** (on GitHub website)
+   - Create new private repository named `react-firebase-ai-assistant`
+   - Don't initialize with README (we already have one)
+
+2. **Connect local project to GitHub**
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit - React AI Assistant prototype"
+   git branch -M main
+   git remote add origin https://github.com/YOUR_USERNAME/react-firebase-ai-assistant.git
+   git push -u origin main
+   ```
+
+### Daily Development Workflow
+
+```bash
+# Save your work
+git add .
+git commit -m "Add feature description"
+git push
+
+# Pull latest changes (if working with others)
+git pull
+```
 
 ## Contributing
 
