@@ -18,53 +18,65 @@ export default function OutputPanel({ output, isLoading }: OutputPanelProps) {
   }
 
   return (
-    <div className="h-[500px] flex flex-col bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
       <div className="mb-4 flex justify-between items-center">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
             Output
           </h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            AI response will appear here.
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            AI-generated response will appear here.
           </p>
         </div>
 
         {output && !isLoading && (
           <button
             onClick={handleCopy}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex items-center space-x-2"
             title="Copy to clipboard"
           >
             {copied ? (
-              <Check className="w-4 h-4 text-green-500" />
+              <>
+                <Check className="w-4 h-4 text-green-500" />
+                <span className="text-sm text-green-500">Copied!</span>
+              </>
             ) : (
-              <Copy className="w-4 h-4" />
+              <>
+                <Copy className="w-4 h-4" />
+                <span className="text-sm">Copy</span>
+              </>
             )}
           </button>
         )}
       </div>
 
-      <div className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900 p-4 overflow-y-auto min-h-[400px] max-h-[420px]">
+      <div className="border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900 p-6 min-h-[300px] max-h-[500px] overflow-y-auto">
         {isLoading ? (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center h-full min-h-[250px]">
             <div className="text-center">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-4" />
-              <p className="text-gray-500 dark:text-gray-400 text-sm">
+              <Loader2 className="w-10 h-10 animate-spin text-blue-500 mx-auto mb-4" />
+              <p className="text-gray-500 dark:text-gray-400 text-lg">
                 Generating AI response...
+              </p>
+              <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">
+                This may take a few seconds
               </p>
             </div>
           </div>
         ) : output ? (
-          <div className="prose prose-sm dark:prose-invert max-w-none">
-            <pre className="whitespace-pre-wrap text-sm text-gray-900 dark:text-white font-sans leading-relaxed">
+          <div className="prose prose-gray dark:prose-invert max-w-none">
+            <pre className="whitespace-pre-wrap text-gray-900 dark:text-white font-sans leading-relaxed text-base">
               {output}
             </pre>
           </div>
         ) : (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center h-full min-h-[250px]">
             <div className="text-center text-gray-500 dark:text-gray-400">
-              <p className="text-2xl mb-2">💭</p>
-              <p className="text-sm">Submit a question to see the AI response here.</p>
+              <div className="text-6xl mb-4">🤖</div>
+              <h3 className="text-lg font-medium mb-2">Ready to help!</h3>
+              <p className="text-sm max-w-md mx-auto">
+                Submit your question above and I'll provide a detailed AI-powered response here.
+              </p>
             </div>
           </div>
         )}

@@ -72,10 +72,10 @@ Usage count: ${usageCount + 1}/2 requests used.`)
       language={language}
       setLanguage={setLanguage}
     >
-      {/* Main content container with constrained height */}
-      <div className="flex flex-1 gap-6 p-6 max-w-6xl mx-auto w-full">
-        {/* Input Panel - Left Side */}
-        <div className="flex-1 min-w-0 max-w-lg">
+      {/* Main content container with vertical stacking */}
+      <div className="flex flex-col gap-6 p-6 max-w-4xl mx-auto w-full">
+        {/* Input Panel - Top */}
+        <div className="w-full">
           <InputPanel
             input={input}
             setInput={setInput}
@@ -85,8 +85,8 @@ Usage count: ${usageCount + 1}/2 requests used.`)
           />
         </div>
 
-        {/* Output Panel - Right Side */}
-        <div className="flex-1 min-w-0 max-w-lg">
+        {/* Output Panel - Bottom */}
+        <div className="w-full">
           <OutputPanel
             output={output}
             isLoading={isLoading}
