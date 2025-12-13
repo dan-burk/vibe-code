@@ -1,215 +1,91 @@
-# React + Firebase AI Assistant
+# Vibe Code Project Context
 
-A web application built with ReactJS that allows unauthenticated users to make limited API calls, then prompts them to log in using Firebase Auth. The backend is built using serverless Google Cloud Functions, protected by Firebase ID tokens, with data stored in Firebase Firestore.
+This is a multi-template web application development project organized for efficient prototyping and implementation.
 
-## Quick Links
+## Project Organization
 
-- [App Overview](./app_overview.md) - Detailed technical overview
-- [App Requirements](./app_requirements.md) - UI/UX specifications and user flow
-- [Getting Started Guide](#getting-started-guide) - Setup instructions
+This repository uses a hierarchical structure where each folder has its own CLAUDE.md context file:
 
-## Tech Stack
+### Root Level (You are here)
+General project overview and folder structure guidance.
 
-### Frontend
-- **Framework:** ReactJS (Vite + TypeScript)
-- **Hosting:** Firebase Hosting
-- **Styling:** Tailwind CSS
+### `/app` Folder
+The active implementation workspace. Contains the current app being developed.
+- **Context:** See `app/CLAUDE.md` for detailed file structure, component relationships, and implementation specifics
+- **Purpose:** Active development, testing, and building
 
-### Authentication
-- **Provider:** Firebase Auth
-- **Methods:** Google, Email/Password, Anonymous, Microsoft, Facebook
+### `/app-templates` Folder
+Template library for different application types.
+- **Context:** See `app-templates/CLAUDE.md` for template catalog
+- **Purpose:** Reference specifications and architecture patterns
 
-### Backend
-- **Platform:** Google Cloud Functions
-- **Language:** NodeJS
-- **API Integration:** OpenAI API
+### `/app-templates/[template-name]` Subfolders
+Individual template specifications (e.g., `ai-data-science/`)
+- **Context:** Each has its own `CLAUDE.md` with template-specific details
+- **Purpose:** Complete documentation for implementing that specific template type
 
-### Database
-- **Type:** Firebase Firestore
+## Folder Structure
 
-### Domain
-- **Provider:** GoDaddy
-- **Custom Domain:** mycoolapp.com (configurable)
-
-## Key Features
-
-- Clean two-panel interface (input/output)
-- Limited unauthenticated access (2 API calls)
-- Firebase-powered authentication
-- Protected backend API calls via Cloud Functions
-- Usage tracking and rate limiting
-- Mobile responsive design
-- Professional UI inspired by RTutor.ai, Julius.ai, and DeepNote
-
-## Project Structure
-
-See `app/CLAUDE.md` for detailed file organization and component relationships.
-
-## Getting Started Guide
-
-This guide will walk you through setting up your React prototype project from initial setup to version control.
-
-### Prerequisites
-
-Before starting, ensure you have:
-- Node.js and npm installed
-- VSCode or your preferred code editor
-- Git installed (for version control)
-
-### Step 1: Project Setup
-
-#### Option A: Fork Base Repo
-
-If you want to maintain a connection to the original repo:
-
-1. Fork a React starter template (e.g., Vite + React + TypeScript)
-2. Clone your forked repo to your local machine
-3. Upload custom files: `app_overview.json`, `app_requirements.json`, `app/CLAUDE.md`
-
-#### Option B: Clone and Customize
-
-If you want to do your own thing:
-
-1. Clone a React starter template directly (e.g., Vite + React + TypeScript)
-2. Delete the `.git` folder to remove the original repo's version control
-3. Upload custom files: `app_overview.json`, `app_requirements.json`, `app/CLAUDE.md`
-
-### Step 2: Local Development Setup
-
-Navigate to the app directory and install dependencies:
-
-```bash
-cd app
-npm install
+```
+vibe-code/
+├── app/                           # Active implementation
+│   ├── src/                       # Source code
+│   ├── public/                    # Static assets
+│   ├── CLAUDE.md                  # Implementation context
+│   └── ...                        # Build configs, dependencies
+│
+├── app-templates/                 # Template library
+│   ├── CLAUDE.md                  # Template catalog
+│   └── [template-name]/           # Individual templates
+│       ├── CLAUDE.md              # Template-specific guide
+│       ├── app_overview.md        # Technical specs
+│       └── app_requirements.md    # Requirements
+│
+├── CLAUDE.md                      # This file (project context)
+└── README.md                      # Project documentation
 ```
 
-Start the development server:
+## Navigation Guide
 
-```bash
-npm run dev
-```
+**When working on the current implementation:**
+→ Use `app/CLAUDE.md`
 
-### Step 3: Version Control Setup (Option B Only)
+**When exploring template options:**
+→ Use `app-templates/CLAUDE.md`
 
-If you chose Option B:
+**When implementing a specific template:**
+→ Use `app-templates/[template-name]/CLAUDE.md`
 
-1. Delete the preexisting `.git` folder
-2. Initialize a new Git repository:
+**For general project info:**
+→ Use this file or `README.md`
 
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-```
+## Context Hierarchy
 
-3. Create a new repository on GitHub
-4. Link your local repo to GitHub:
+Each CLAUDE.md file knows its scope:
 
-```bash
-git remote add origin https://github.com/yourusername/your-repo-name.git
-git branch -M main
-git push -u origin main
-```
+1. **Root CLAUDE.md** (this file): Project structure and navigation
+2. **app/CLAUDE.md**: Implementation details and file organization
+3. **app-templates/CLAUDE.md**: Template catalog and overview
+4. **app-templates/[template]/CLAUDE.md**: Specific template implementation guide
 
-### Step 4: Iteration Process
+## Quick Reference
 
-Once your development server is running:
+- **Current implementation status:** Check `app/CLAUDE.md`
+- **Available templates:** Check `app-templates/CLAUDE.md`
+- **Template details:** Check `app-templates/[template-name]/CLAUDE.md`
+- **Project overview:** Check `README.md`
 
-1. Make changes to your React prototype
-2. Test locally with `npm run dev`
-3. Update `app/CLAUDE.md` if new files are created
-4. Commit changes frequently to GitHub
+## Development Pattern
 
-### Important Tips
+1. Choose a template from `app-templates/`
+2. Review template's CLAUDE.md for specifications
+3. Implement in `app/` following template guidance
+4. Update `app/CLAUDE.md` as implementation evolves
+5. Commit changes frequently
 
-- **Keep context updated:** Maintain `app/CLAUDE.md` as the backbone of organization
-- **Commit frequently:** Think of this as saving your work
-- **Test locally:** Always verify changes work before committing
-- **Document changes:** Keep README and documentation up to date
+## Key Principles
 
-## Development Workflow
-
-### Making Changes
-
-1. Create a new branch for features:
-```bash
-git checkout -b feature/your-feature-name
-```
-
-2. Make your changes and test locally
-
-3. Commit your changes:
-```bash
-git add .
-git commit -m "Description of changes"
-```
-
-4. Push to GitHub:
-```bash
-git push origin feature/your-feature-name
-```
-
-### File Naming Conventions
-
-When working with files, ensure proper naming:
-- `main_tsx.tsx` → `main.tsx`
-- `globals_css.css` → `globals.css`
-- `input_panel_tsx.ts` → `InputPanel.tsx`
-
-## Configuration
-
-### Environment Variables
-
-Create a `.env` file in the app directory with:
-
-```env
-VITE_FIREBASE_API_KEY=your_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-```
-
-## Security
-
-- **API Keys:** Never store secrets in frontend code
-- **Backend Protection:** Cloud Functions validate Firebase ID tokens
-- **Firestore Rules:** Access controlled by user UID
-- **Rate Limiting:** Anonymous (2 calls max), Authenticated (UID-based)
-
-## Stretch Goals
-
-- [ ] History tab for previous inputs/outputs
-- [ ] Rate limiting and usage quotas
-- [ ] User profiles and preferences in Firestore
-- [ ] Share/export output functionality
-- [ ] UI polish (loading animations, error messages)
-
-## Documentation
-
-- [App Overview](./app_overview.md) - Complete technical architecture
-- [App Requirements](./app_requirements.md) - UI/UX specifications
-
-## Resources
-
-- [Firebase Documentation](https://firebase.google.com/docs)
-- [React Documentation](https://react.dev)
-- [Google Cloud Functions](https://cloud.google.com/functions/docs)
-- [Tailwind CSS](https://tailwindcss.com/docs)
-
-## License
-
-MIT License - See LICENSE file for details
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## Support
-
-For issues and questions, please open an issue on GitHub.
+- **Each folder is self-contained** with its own context
+- **CLAUDE.md files are hierarchical** - each knows its scope
+- **Templates are reference specs** - not rigid requirements
+- **The app folder is your workspace** - where implementation happens
