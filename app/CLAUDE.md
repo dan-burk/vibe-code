@@ -1,3 +1,10 @@
+# Project Context
+
+This is a React + Firebase AI Assistant web app that allows users to make limited API calls before authenticating. Built with ReactJS, Vite, TypeScript, and Tailwind CSS, it features a two-panel interface for input/output interactions. The backend uses Google Cloud Functions to securely handle OpenAI API calls with Firebase authentication and Firestore for data storage.
+
+## Project Structure
+
+```
 app/
 ├── public/                          # Static assets served by Vite
 │   ├── favicon.ico                  # App icon
@@ -21,9 +28,9 @@ app/
 │   │   ├── history/
 │   │   │   └── HistoryPanel.tsx
 │   │   ├── payment/                # (Placeholders for future payment components)
-│   │   │   ├── 
-│   │   │   ├── 
-│   │   │   └── 
+│   │   │   ├──
+│   │   │   ├──
+│   │   │   └──
 │   │   └── modals/
 │   │       ├── ContactModal.tsx
 │   │       ├── PrivacyModal.tsx
@@ -66,5 +73,6 @@ app/
 ├── .env.example                    # Example environment file
 ├── .gitignore                      # Git ignore rules
 ├── package.json                    # Dependencies & scripts
-├── app_structure.txt               # Project structure documentation
+├── CLAUDE.md                       # Project structure documentation
 └── README.md                       # Project documentation
+```
