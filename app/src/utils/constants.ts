@@ -1,28 +1,31 @@
-export const USAGE_LIMITS = {
-  ANONYMOUS: 2,
-  AUTHENTICATED: 50, // Per day or per month
-} as const
+// Math Scribe Constants
 
-export const SUPPORTED_LANGUAGES = {
-  en: 'English',
-  es: 'Español',
-} as const
+export const APP_NAME = 'Math Scribe'
 
 export const STORAGE_KEYS = {
-  USAGE_COUNT: 'usage_count',
-  THEME: 'theme',
-  LANGUAGE: 'language',
-  CHAT_HISTORY: 'chat_history',
+  THEME: 'math_scribe_theme',
+  WORKSPACE: 'math_scribe_workspace',
+  GRAPH_STATE: 'math_scribe_graph',
 } as const
 
-export const API_ENDPOINTS = {
-  ASK_AI: '/api/ask-ai',
-  AUTH: '/api/auth',
+export const GRAPH_DEFAULTS = {
+  X_MIN: -10,
+  X_MAX: 10,
+  Y_MIN: -10,
+  Y_MAX: 10,
 } as const
 
-export const ROUTES = {
-  HOME: '/',
-  LOGIN: '/login',
-  DASHBOARD: '/dashboard',
-  HISTORY: '/history',
+export const INITIAL_GREETING = "I'm ready to write for you. Just tell me what to put down and I'll do exactly that. What are we working on?"
+
+export const CONFIRMATION_MESSAGES = {
+  AWAITING: 'Is that what you wanted?',
+  CONFIRMED: "Got it. What's next?",
+  REJECTED: 'What should I write instead?',
+} as const
+
+export const COLORS = {
+  POINT: '#3b82f6', // blue-500
+  LINE: '#10b981', // emerald-500
+  FUNCTION: '#8b5cf6', // violet-500
+  GRID: '#e5e7eb', // gray-200
 } as const

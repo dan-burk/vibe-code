@@ -6,11 +6,68 @@
   * {
     @apply border-gray-200;
   }
+
   body {
-    @apply bg-white text-gray-900;
+    @apply bg-gray-50 text-gray-900 antialiased;
   }
-  
+
   .dark body {
     @apply bg-gray-900 text-white;
+  }
+}
+
+@layer components {
+  /* KaTeX equation styling */
+  .katex-display {
+    @apply my-2;
+  }
+
+  .katex {
+    @apply text-gray-900;
+  }
+
+  .dark .katex {
+    @apply text-white;
+  }
+
+  /* Workspace item animation */
+  .workspace-item {
+    @apply animate-fadeIn;
+  }
+
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-gray-100 dark:bg-gray-800 rounded;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-gray-600 rounded hover:bg-gray-400 dark:hover:bg-gray-500;
+  }
+}
+
+@layer utilities {
+  /* Fade in animation */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  /* Focus ring utility */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900;
   }
 }

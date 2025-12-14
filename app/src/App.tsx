@@ -1,133 +1,283 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Layout from './components/layout/Layout'
-import InputPanel from './components/ui/InputPanel'
-import OutputPanel from './components/ui/OutputPanel'
-import UsageIndicator from './components/ui/UsageIndicator'
-import LandingPage from './components/ui/LandingPage'
+import Workspace from './components/ui/Workspace'
+import ConfirmationBar from './components/ui/ConfirmationBar'
+import InputBar from './components/ui/InputBar'
+import { getMockScribeResponse } from './services/mockScribe'
+import { exportWorkspaceToPDF } from './utils/pdfExport'
+import { INITIAL_GREETING, STORAGE_KEYS } from './utils/constants'
+import type {
+  WorkspaceItem,
+  GraphState,
+  ConfirmationState,
+  ScribeResponse,
+} from './types/components'
+
+// Initial empty graph state
+const initialGraphState: GraphState = {
+  points: [],
+  lines: [],
+  functions: [],
+}
 
 function App() {
-  const [showLanding, setShowLanding] = useState(true)
-  const [input, setInput] = useState('')
-  const [output, setOutput] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [usageCount, setUsageCount] = useState(0)
+  // Theme state
   const [isDarkMode, setIsDarkMode] = useState(false)
-  const [language, setLanguage] = useState('en')
 
-  // Load usage count from localStorage on mount
+  // Workspace state
+  const [workspaceItems, setWorkspaceItems] = useState<WorkspaceItem[]>([])
+  const [graphState, setGraphState] = useState<GraphState>(initialGraphState)
+  const [showGraph, setShowGraph] = useState(false)
+
+  // Interaction state
+  const [isLoading, setIsLoading] = useState(false)
+  const [confirmationState, setConfirmationState] = useState<ConfirmationState>('none')
+  const [confirmationMessage, setConfirmationMessage] = useState(INITIAL_GREETING)
+  const [lastResponse, setLastResponse] = useState<ScribeResponse | null>(null)
+  const [isFinished, setIsFinished] = useState(false)
+
+  // Load theme from localStorage on mount
   useEffect(() => {
-    const savedUsage = localStorage.getItem('usage_count')
-    if (savedUsage) {
-      setUsageCount(parseInt(savedUsage, 10))
-    }
-
-    // Check for dark mode preference
-    const savedTheme = localStorage.getItem('theme')
-    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME)
+    if (
+      savedTheme === 'dark' ||
+      (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    ) {
       setIsDarkMode(true)
       document.documentElement.classList.add('dark')
     }
-
-    // Check if user has used the app before
-    const hasUsedApp = localStorage.getItem('has_used_app')
-    if (hasUsedApp) {
-      setShowLanding(false)
-    }
   }, [])
 
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode)
-    if (!isDarkMode) {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
+  // Toggle dark mode
+  const toggleDarkMode = useCallback(() => {
+    setIsDarkMode((prev) => {
+      const newMode = !prev
+      if (newMode) {
+        document.documentElement.classList.add('dark')
+        localStorage.setItem(STORAGE_KEYS.THEME, 'dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+        localStorage.setItem(STORAGE_KEYS.THEME, 'light')
+      }
+      return newMode
+    })
+  }, [])
+
+  // Generate unique ID
+  const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
+  // Process scribe response and update state
+  const processScribeResponse = useCallback((response: ScribeResponse) => {
+    // Handle latex (equation)
+    if (response.latex) {
+      const newItem: WorkspaceItem = {
+        id: generateId(),
+        type: 'equation',
+        content: response.latex,
+        isBoxed: response.finished,
+        timestamp: new Date(),
+      }
+      setWorkspaceItems((prev) => [...prev, newItem])
+    }
+
+    // Handle graph commands
+    if (response.graph) {
+      const { action, data } = response.graph
+
+      switch (action) {
+        case 'add_point':
+          if (data?.x !== undefined && data?.y !== undefined) {
+            setGraphState((prev) => ({
+              ...prev,
+              points: [
+                ...prev.points,
+                {
+                  id: generateId(),
+                  x: data.x!,
+                  y: data.y!,
+                  label: data.label,
+                },
+              ],
+            }))
+            setShowGraph(true)
+          }
+          break
+
+        case 'add_line':
+          if (data?.points && data.points.length >= 2) {
+            setGraphState((prev) => ({
+              ...prev,
+              lines: [
+                ...prev.lines,
+                {
+                  id: generateId(),
+                  points: data.points!,
+                },
+              ],
+            }))
+            setShowGraph(true)
+          }
+          break
+
+        case 'add_function':
+          if (data?.latex) {
+            setGraphState((prev) => ({
+              ...prev,
+              functions: [
+                ...prev.functions,
+                {
+                  id: generateId(),
+                  latex: data.latex!,
+                },
+              ],
+            }))
+            setShowGraph(true)
+          }
+          break
+
+        case 'remove':
+          // Remove last item from appropriate array
+          setGraphState((prev) => {
+            if (prev.points.length > 0) {
+              return { ...prev, points: prev.points.slice(0, -1) }
+            }
+            if (prev.lines.length > 0) {
+              return { ...prev, lines: prev.lines.slice(0, -1) }
+            }
+            if (prev.functions.length > 0) {
+              return { ...prev, functions: prev.functions.slice(0, -1) }
+            }
+            return prev
+          })
+          break
+
+        case 'clear':
+          setGraphState(initialGraphState)
+          setShowGraph(true)
+          break
+      }
+    }
+
+    // Handle finished state
+    if (response.finished) {
+      setIsFinished(true)
+      // Box the last equation
+      setWorkspaceItems((prev) => {
+        if (prev.length === 0) return prev
+        const lastIdx = prev.length - 1
+        return prev.map((item, idx) =>
+          idx === lastIdx ? { ...item, isBoxed: true } : item
+        )
+      })
+    }
+
+    // Update confirmation state
+    if (response.text.includes('?')) {
+      setConfirmationState('awaiting')
     } else {
-      document.documentElement.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
+      setConfirmationState('none')
     }
-  }
+    setConfirmationMessage(response.text)
+    setLastResponse(response)
+  }, [])
 
-  const handleGetStarted = () => {
-    setShowLanding(false)
-    localStorage.setItem('has_used_app', 'true')
-  }
+  // Handle student instruction submission
+  const handleSubmit = useCallback(
+    async (instruction: string) => {
+      if (isLoading) return
 
-  const handleSubmit = async () => {
-    if (!input.trim()) return
+      setIsLoading(true)
 
-    // Check usage limit (2 requests before login required)
-    if (usageCount >= 2) {
-      setOutput('Login required to continue. You have reached the limit of 2 free requests.')
-      return
+      try {
+        // Get current workspace state for context
+        const workspaceContext = workspaceItems.map((item) => item.content).join('\n')
+
+        // Get mock response (replace with actual API call later)
+        const response = await getMockScribeResponse(instruction, workspaceContext)
+
+        processScribeResponse(response)
+      } catch (error) {
+        console.error('Error getting scribe response:', error)
+        setConfirmationMessage(
+          "I'm having trouble connecting. Could you say that again?"
+        )
+        setConfirmationState('none')
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [isLoading, workspaceItems, processScribeResponse]
+  )
+
+  // Handle confirmation (Yes)
+  const handleConfirm = useCallback(() => {
+    setConfirmationState('confirmed')
+    setConfirmationMessage("Got it. What's next?")
+    setTimeout(() => setConfirmationState('none'), 1500)
+  }, [])
+
+  // Handle rejection (No / Undo)
+  const handleReject = useCallback(() => {
+    // Undo last action
+    if (lastResponse?.latex) {
+      setWorkspaceItems((prev) => prev.slice(0, -1))
+    }
+    if (lastResponse?.graph) {
+      // Undo graph action is handled in processScribeResponse with 'remove'
+      setGraphState((prev) => {
+        if (prev.points.length > 0) {
+          return { ...prev, points: prev.points.slice(0, -1) }
+        }
+        if (prev.lines.length > 0) {
+          return { ...prev, lines: prev.lines.slice(0, -1) }
+        }
+        if (prev.functions.length > 0) {
+          return { ...prev, functions: prev.functions.slice(0, -1) }
+        }
+        return prev
+      })
     }
 
-    setIsLoading(true)
-    
-    // Simulate API call - replace this with actual backend call later
-    setTimeout(() => {
-      setOutput(`Mock AI Response to: "${input}"
-      
-This is a placeholder response. In the real app, this would be connected to your backend API that calls OpenAI.
+    setConfirmationState('rejected')
+    setConfirmationMessage('Okay, removed that. What should I write instead?')
+  }, [lastResponse])
 
-Input language detected: ${language === 'en' ? 'English' : 'Spanish'}
-Usage count: ${usageCount + 1}/2 requests used.`)
-      
-      const newUsageCount = usageCount + 1
-      setUsageCount(newUsageCount)
-      localStorage.setItem('usage_count', newUsageCount.toString())
-      setIsLoading(false)
-    }, 2000)
-  }
+  // Handle PDF export
+  const handleExportPDF = useCallback(async () => {
+    await exportWorkspaceToPDF()
+  }, [])
 
-  // Show landing page
-  if (showLanding) {
-    return (
-      <Layout 
-        isDarkMode={isDarkMode} 
-        toggleDarkMode={toggleDarkMode}
-        language={language}
-        setLanguage={setLanguage}
-        isLanding={true}
-      >
-        <LandingPage 
-          onGetStarted={handleGetStarted}
-          language={language}
-        />
-      </Layout>
-    )
-  }
-
-  // Show main app
   return (
-    <Layout 
-      isDarkMode={isDarkMode} 
+    <Layout
+      isDarkMode={isDarkMode}
       toggleDarkMode={toggleDarkMode}
-      language={language}
-      setLanguage={setLanguage}
+      onExportPDF={handleExportPDF}
+      isFinished={isFinished}
     >
-      {/* Main content container with vertical stacking */}
-      <div className="flex flex-col gap-6 p-6 max-w-4xl mx-auto w-full">
-        {/* Input Panel - Top */}
-        <div className="w-full">
-          <InputPanel
-            input={input}
-            setInput={setInput}
-            onSubmit={handleSubmit}
-            isLoading={isLoading}
-            language={language}
-          />
-        </div>
+      <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full px-4 sm:px-6 py-6 gap-4">
+        {/* Workspace - Main area for equations and graphs */}
+        <Workspace
+          items={workspaceItems}
+          graphState={graphState}
+          showGraph={showGraph}
+        />
 
-        {/* Output Panel - Bottom */}
-        <div className="w-full">
-          <OutputPanel
-            output={output}
-            isLoading={isLoading}
-          />
-        </div>
+        {/* Confirmation Bar - Shows AI message and Yes/No buttons */}
+        <ConfirmationBar
+          message={confirmationMessage}
+          confirmationState={confirmationState}
+          onConfirm={handleConfirm}
+          onReject={handleReject}
+        />
+
+        {/* Input Bar - Text input for instructions */}
+        <InputBar
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+          disabled={confirmationState === 'awaiting'}
+          placeholder="Type your instruction..."
+        />
       </div>
-
-      {/* Usage Indicator */}
-      <UsageIndicator usageCount={usageCount} maxUsage={2} />
     </Layout>
   )
 }
