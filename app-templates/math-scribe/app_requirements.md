@@ -2,234 +2,365 @@
 
 ## UI Description
 
+### Design Philosophy
+
+**Simple, focused, accessible.** This is not a chat interface—it's a workspace where math appears as the student dictates it. The UI should feel like having a patient scribe sitting next to the student, ready to write whatever they say.
+
 ### Style Inspiration
 
-- Claude.ai (conversational interface)
-- Overleaf (LaTeX rendering quality)
-- ChatGPT (clean chat UI)
-- Notion (minimal, focused design)
+- Google Docs (clean workspace)
+- Desmos (beautiful math rendering)
+- Voice memo apps (prominent microphone button)
+- Accessibility-first design
 
 ### Layout
 
-#### Chat Panel (Main Area)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Math Scribe                              [Export PDF] [👤]  │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│                                                             │
+│                      WORKSPACE                              │
+│                                                             │
+│   ┌─────────────────────────────────────────────────────┐   │
+│   │                                                     │   │
+│   │    Equations and graphs render here                 │   │
+│   │    as student dictates them                         │   │
+│   │                                                     │   │
+│   │         m = (y₂ - y₁) / (x₂ - x₁)                   │   │
+│   │                                                     │   │
+│   │         m = (-2 - 1) / (-5 - (-3))                  │   │
+│   │                                                     │   │
+│   │    [Interactive Graph Here]                         │   │
+│   │                                                     │   │
+│   └─────────────────────────────────────────────────────┘   │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   💬 "Point at (3, 3). Is that what you wanted?"            │
+│                                                             │
+│                              [✓ Yes]    [✗ No / Undo]       │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Type your instruction...                    [🎤] [Send]   │
+│                                                             │
+│  Text input (primary)              Voice button (optional)  │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
 
-Conversational interface where user messages and AI responses are displayed. Math content rendered with LaTeX inline.
+### Key UI Elements
 
-#### Input Area (Bottom)
+#### 1. Workspace (Main Area)
 
-Text input field for user messages with send button. Could include quick-action buttons for common math requests.
+The primary area where math content appears. This is NOT a chat log—it's a clean workspace showing:
+- Rendered equations (KaTeX)
+- Interactive graphs (Desmos/Plotly)
+- Work steps in order
 
-#### Sidebar (Optional)
+The workspace should look like a clean sheet of paper with math on it.
 
-- Conversation history
-- New conversation button
-- User settings/logout
+#### 2. Confirmation Bar
 
-#### Header
+Prominent area showing the AI's confirmation question after each action:
 
-Clean header with:
-- App branding (Math Scribe logo/name)
-- User avatar/login status
-- Settings menu
+- Shows what the AI just did
+- Displays "Is that what you wanted?"
+- Two clear buttons: **Yes** and **No/Undo**
+- This is ALWAYS visible after any AI action
 
-#### PDF Export Button
+#### 3. Input Area
 
-Prominent button to export current conversation or selected response to PDF.
+Two input methods available:
+
+**Text Input (Primary)**
+- Standard text field
+- Placeholder: "Type your instruction..."
+- The main way students interact with the app
+
+**Voice Button (Optional)**
+- Microphone icon next to send button
+- Visual states: idle, listening, processing
+- Pulsing animation when active
+- For students who prefer or need voice input
+
+#### 4. Header
+
+Minimal header with:
+- App name (Math Scribe)
+- Export PDF button
+- User avatar / login status
+
+No sidebar, no chat history, no complexity.
 
 ### Device Responsiveness
 
-- Desktop: Full sidebar + chat view
-- Tablet: Collapsible sidebar
-- Mobile: Chat-focused, hamburger menu for sidebar
+- **Desktop:** Full workspace view
+- **Tablet:** Same layout, touch-optimized buttons
+- **Mobile:** Stacked layout, extra-large voice button
 
 ### Theme
 
-Clean, professional, math-friendly:
 - Light mode (default)
-- Dark mode (stretch goal)
-- High contrast for math readability
+- High contrast for readability
+- Large, clear fonts
+- Accessible color choices
 
 ## User Flow
 
-### Step 1: Landing
+### Step 1: Landing / Login
 
-User arrives at homepage. If not logged in, sees login prompt or limited demo.
+User arrives. If not logged in, sees simple login screen with Google Sign-in.
 
-### Step 2: Authentication
+### Step 2: Ready State
 
-User signs in with Google. Redirected to main chat interface.
+After login, user sees:
+- Empty workspace
+- AI greeting: "I'm ready to write for you. Just tell me what to put down. What are we working on?"
+- Text input field with optional voice button
 
-### Step 3: New Conversation
+### Step 3: Student Gives Instruction
 
-User sees empty chat or welcome message explaining Math Scribe's capabilities.
+Student types (or speaks): "Write x plus three equals seven"
 
-### Step 4: Ask a Math Question
+**Text flow (primary):**
+1. Student types instruction in text field
+2. Student clicks Send (or presses Enter)
+3. Instruction sent to AI
 
-User types a math question or request (e.g., "Explain the quadratic formula" or "Help me solve x^2 + 5x + 6 = 0").
+**Voice flow (optional):**
+1. Student clicks microphone button
+2. Microphone pulses (listening)
+3. Transcript appears in real-time
+4. Student stops speaking or clicks again
+5. Instruction sent to AI
 
-### Step 5: AI Response with LaTeX
+### Step 4: AI Writes + Confirms
 
-Math Scribe responds with explanation including rendered LaTeX formulas. User sees beautifully formatted math.
+AI responds:
+- Renders `x + 3 = 7` in the workspace
+- Displays in confirmation bar: "Done—I wrote x + 3 = 7. Is that what you wanted?"
 
-### Step 6: Continue Conversation
+### Step 5: Student Confirms or Corrects
 
-User can ask follow-up questions. Context is maintained throughout the conversation.
+**If correct:** Student says "Yes" or clicks Yes button
+- AI waits silently for next instruction
 
-### Step 7: Export to PDF
+**If incorrect:** Student says "No" or "Wait, I meant..." or clicks No
+- AI undoes the action
+- Asks what they wanted instead
 
-User clicks "Export PDF" button. Current conversation (or selected portion) is rendered to a downloadable PDF.
+### Step 6: Continue Working
 
-### Step 8: New Conversation or History
+Loop continues:
+- Student dictates
+- AI writes exactly that
+- AI confirms
+- Student approves or corrects
 
-User can start a new conversation or access previous conversations from sidebar.
+### Step 7: Finish and Export
+
+When student is done:
+- Student says "I'm done" or "That's my answer"
+- AI boxes the final answer
+- Student clicks Export PDF
+- PDF downloads with all work and boxed answer
 
 ## Core UI Components
 
-### ChatMessage Component
+### VoiceButton Component (Optional)
 
 ```
-┌─────────────────────────────────────────┐
-│ [Avatar] User                     12:34 │
-│ Can you explain the derivative of sin?  │
-└─────────────────────────────────────────┘
+  [🎤]   ← Next to send button
 
-┌─────────────────────────────────────────┐
-│ [Avatar] Math Scribe              12:35 │
-│ The derivative of sin(x) is cos(x).     │
-│                                         │
-│ Using the limit definition:             │
-│                                         │
-│    d                 sin(x+h) - sin(x)  │
-│   ── sin(x) = lim   ─────────────────   │
-│   dx          h→0          h            │
-│                                         │
-│ [📄 Export this response]               │
-└─────────────────────────────────────────┘
+States:
+- Idle: Gray microphone
+- Listening: Pulsing blue with animation
+- Processing: Spinner
+- Error: Red with retry option
 ```
 
-### Input Component
+### ConfirmationBar Component
 
 ```
-┌─────────────────────────────────────────┐
-│ Ask a math question...            [Send]│
-└─────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│  💬 "I wrote x + 3 = 7. Is that what you wanted?"           │
+│                                                             │
+│                              [✓ Yes]    [✗ No / Undo]       │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### PDF Export Modal (Optional)
+### Workspace Component
+
+Clean area for rendered math:
+- Equations render via KaTeX
+- Graphs render via Desmos/Plotly
+- Steps appear in order, top to bottom
+- Can scroll if content exceeds viewport
+
+### InputBar Component
 
 ```
-┌─────────────────────────────────────────┐
-│ Export to PDF                           │
-│                                         │
-│ ○ Current response only                 │
-│ ● Entire conversation                   │
-│                                         │
-│ Filename: [math-scribe-export____]      │
-│                                         │
-│              [Cancel]  [Download PDF]   │
-└─────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│  Type your instruction...                    [🎤]  [Send]   │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## LaTeX Rendering Requirements
+## Voice Input Requirements (Optional Feature)
 
-### Inline Math
+### Browser Support
 
-- Delimiters: `$...$`
-- Renders inline with text
-- Example: "The value of $\pi$ is approximately 3.14159"
+Web Speech API is supported in:
+- Chrome (desktop & Android)
+- Safari (desktop & iOS)
+- Edge
 
-### Block Math
+Text input always available as primary method.
 
-- Delimiters: `$$...$$`
-- Renders centered on its own line
-- Example: Equations, formulas, multi-line derivations
+### Voice UX Requirements
 
-### Supported Notation
+1. **Clear affordance** - Voice button visible next to send button
+2. **Visual feedback** - Show when listening (animation)
+3. **Interim results** - Show transcription as student speaks
+4. **Easy correction** - Student can re-speak if misheard
+5. **Not required** - Text input is always the fallback
 
-Must support common math notation:
-- Fractions: `\frac{a}{b}`
-- Exponents/subscripts: `x^2`, `x_n`
-- Greek letters: `\alpha`, `\beta`, `\pi`
-- Integrals: `\int_a^b f(x) dx`
-- Summations: `\sum_{i=1}^n`
-- Matrices: `\begin{matrix}...\end{matrix}`
-- Square roots: `\sqrt{x}`
-- Limits: `\lim_{x \to 0}`
+### Voice Commands to Support
 
-### Error Handling
+| Student Says | Expected Action |
+|--------------|-----------------|
+| "Write [equation]" | Render equation |
+| "Plot a point at [coords]" | Add point to graph |
+| "Draw a line through [points]" | Add line to graph |
+| "Subtract 3 from both sides" | Show algebraic step |
+| "Yes" / "Yeah" / "That's right" | Confirm and wait |
+| "No" / "Wait" / "Undo" | Undo last action |
+| "I'm done" / "That's my answer" | Mark final answer |
 
-- Malformed LaTeX should display gracefully (show source or error indicator)
-- Should not break the entire message rendering
+## Confirmation Flow Requirements
+
+### After Every AI Action
+
+The AI MUST ask for confirmation. This is non-negotiable because:
+1. Voice recognition may mishear
+2. AI may misinterpret
+3. Student needs to catch mistakes before proceeding
+
+### Confirmation UI States
+
+**Awaiting confirmation:**
+- Confirmation bar is prominent
+- Yes/No buttons are clearly visible
+- Input is disabled until confirmed
+
+**After "Yes":**
+- Confirmation bar shows "Got it. What's next?"
+- Input becomes active
+
+**After "No":**
+- Last action is undone
+- AI asks "What should I write instead?"
+
+## Graph Requirements
+
+### Coordinate Plane
+
+Default settings:
+- x-axis: -10 to 10
+- y-axis: -10 to 10
+- Grid lines visible
+- Axis labels visible
+
+### Supported Graph Actions
+
+| Action | What Student Says |
+|--------|-------------------|
+| Create graph | "Draw a coordinate plane" |
+| Plot point | "Put a point at (3, 2)" |
+| Draw line | "Draw a line through those points" |
+| Shade region | "Shade below the line" |
+| Label point | "Label that point A" |
+
+### Graph Interactivity
+
+- Pan and zoom (for student to examine)
+- Hover to see coordinates
+- Touch-friendly on mobile
 
 ## PDF Export Requirements
 
 ### Content
 
-- Include all rendered LaTeX (as images or vector)
-- Preserve conversation structure
-- Include timestamps (optional)
-- Add header with "Math Scribe" branding
+- All equations rendered beautifully
+- Graphs included as images
+- Final answer boxed/highlighted
+- Clean, printable layout
 
-### Quality
+### Trigger
 
-- High resolution for math formulas
+- Button click: "Export PDF"
+- Voice command: "I'm done" or "Download my work"
+
+### Output
+
+- Filename: `math-work-[date].pdf`
+- One page if possible, multi-page if needed
 - Readable when printed
-- Reasonable file size
 
-### Naming
+## Accessibility Requirements
 
-- Default: `math-scribe-[date]-[time].pdf`
-- User customizable
+### Motor Accessibility
+
+- Large tap targets (minimum 44x44px)
+- Text input with optional voice alternative
+- No precise gestures required
+- Keyboard navigation support
+
+### Visual Accessibility
+
+- High contrast text
+- Large, readable fonts
+- Clear visual hierarchy
+- No color-only indicators
+
+### Cognitive Accessibility
+
+- Simple, predictable interface
+- One action at a time
+- Clear confirmation before proceeding
+- No time pressure
+
+## Performance Requirements
+
+- Voice recognition response: < 500ms
+- Equation rendering: < 100ms
+- Graph updates: < 200ms
+- PDF generation: Show progress for > 2 seconds
+
+## Error Handling
+
+### Voice Recognition Errors
+
+- "I didn't catch that. Could you say it again?"
+- Show what was heard, let student correct
+
+### Network Errors
+
+- "Having trouble connecting. Your work is saved."
+- Retry automatically
+
+### Rendering Errors
+
+- Show raw text if KaTeX fails
+- Log error but don't break UI
 
 ## Stretch Goals
 
-### 1. Math Input Palette
-
-Visual buttons for common math symbols that insert LaTeX into the input field.
-
-### 2. Multiple Conversations
-
-Sidebar showing conversation history with titles.
-
-### 3. Share Functionality
-
-Generate shareable link to a conversation (read-only).
-
-### 4. Template Library
-
-Pre-built prompts for common math topics:
-- "Explain [concept]"
-- "Solve step by step: [equation]"
-- "Create practice problems for [topic]"
-
-### 5. Dark Mode
-
-Full dark theme with proper contrast for math rendering.
-
-### 6. Export Formats
-
-Additional export options:
-- LaTeX source (.tex)
-- Markdown with LaTeX
-- PNG image of specific formula
-
-### 7. Collaborative Mode
-
-Teacher can view/assist student's conversation in real-time.
-
-### 8. Voice Input
-
-Speak math problems (with speech-to-text).
-
-## Accessibility
-
-- Keyboard navigation support
-- Screen reader compatibility for non-math text
-- Alt text for rendered math (where possible)
-- Sufficient color contrast
-
-## Performance
-
-- LaTeX rendering should be fast (< 100ms per formula)
-- Conversation should load quickly from Firestore
-- PDF generation should show progress indicator for long conversations
+- [ ] Offline mode (queue actions when offline)
+- [ ] Multiple workspaces
+- [ ] Share workspace with teacher (read-only)
+- [ ] Dark mode
+- [ ] Custom voice wake word
+- [ ] Export to LaTeX source

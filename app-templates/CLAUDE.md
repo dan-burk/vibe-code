@@ -59,28 +59,29 @@ template-name/
 
 **Type:** React + Firebase + Claude API Integration
 
-**Description:** An AI-powered math tutoring application that helps students and teachers write mathematical content. Features real-time LaTeX rendering and PDF export functionality.
+**Description:** An accessibility tool that acts as a faithful mathematical scribe for students who cannot write legibly. The AI writes EXACTLY what the student dictates—never correcting, teaching, or helping—preserving complete student agency over their learning.
 
 **Tech Stack:**
-- Frontend: React (Vite + TypeScript), Tailwind CSS, KaTeX, jsPDF
+- Frontend: React (Vite + TypeScript), Tailwind CSS, KaTeX, Desmos/Plotly, jsPDF
 - Auth: Firebase Auth (Google Sign-in)
 - Backend: Firebase Functions (TypeScript)
 - Database: Firestore
 - AI: Claude API (Anthropic)
+- Voice: Web Speech API
 
 **Key Features:**
-- Chat-style interface for math tutoring
-- Real-time LaTeX rendering with KaTeX
-- PDF export of conversations
-- Conversation history storage
-- System prompt based on skill.md expertise
-- Future: User-provided API keys
+- Text input (primary) with optional voice dictation
+- Faithful transcription - writes EXACTLY what's dictated, even if wrong
+- Confirmation after every action ("Is that what you wanted?")
+- KaTeX equation rendering
+- Interactive graphing with Desmos/Plotly
+- PDF export with boxed final answer
+- Never helps - AI asks "What's the formula?" instead of providing it
 
 **Use Cases:**
-- Math tutoring for students
-- Teacher assistance for creating math content
-- Step-by-step problem solving
-- LaTeX document generation
+- Accessibility accommodation for students with motor disabilities
+- Students who cannot write legibly due to physical conditions
+- Any situation requiring a faithful mathematical scribe
 
 **Documentation:**
 - [Complete Guide](./math-scribe/CLAUDE.md)

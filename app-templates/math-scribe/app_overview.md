@@ -4,17 +4,46 @@
 
 **Name:** Math Scribe
 
-**Description:** An AI-powered math tutoring application that helps students and teachers write mathematical content. Built with React and Firebase, it features real-time LaTeX rendering and PDF export, powered by Claude API through a secure Firebase Functions backend.
+**Description:** An accessibility tool that acts as a faithful mathematical scribe for students who cannot write legibly. Built with React and Firebase, it features voice input, real-time equation/graph rendering, and PDF export. The AI writes EXACTLY what the student dictates—never correcting, teaching, or helping.
+
+### Purpose
+
+This is an **accessibility accommodation**, not a tutoring app. Designed for a student with cerebral palsy who cannot write legibly. The AI is the student's **hands**, not their **brain**.
 
 ### Goals
 
-- Create a focused math tutoring assistant
-- Render LaTeX beautifully in the browser
-- Enable PDF export of generated content
-- Use Google Sign-in for simple authentication
-- Secure Claude API calls through Firebase Functions
-- Store conversation history in Firestore
-- Future: Allow users to provide their own API keys
+- Provide text-to-math transcription for students who cannot write legibly
+- Offer optional voice input for students who prefer or need it
+- Render equations beautifully with KaTeX
+- Render graphs interactively with Desmos/Plotly
+- NEVER correct, teach, or help—preserve student agency
+- Confirm after every action ("Is that what you wanted?")
+- Export completed work to PDF with boxed final answer
+
+## Workflow
+
+### Core Interaction Loop
+
+```
+Student speaks → AI writes exactly that → AI asks "Is that what you wanted?"
+                                                          │
+                                    ┌─────────────────────┴─────────────────────┐
+                                    ↓                                           ↓
+                               "Yes" / "Yeah"                            "No" / correction
+                                    │                                           │
+                                    ↓                                           ↓
+                            Wait for next instruction              AI undoes and rewrites
+```
+
+### What Makes This Different from a Chatbot
+
+| Typical Math Chatbot | Math Scribe |
+|----------------------|-------------|
+| "Here's how to solve that..." | "What would you like me to write?" |
+| Provides formulas | "What's the formula?" (student must know it) |
+| Corrects mistakes | Writes mistakes exactly as dictated |
+| Explains concepts | Only writes what student says |
+| Suggests next steps | Waits silently for instruction |
 
 ## Frontend
 
@@ -23,102 +52,171 @@
 
 ### Key Libraries
 
-- **KaTeX:** Fast LaTeX rendering in browser
-- **jsPDF + html2canvas:** PDF generation from rendered content
+- **KaTeX:** Fast equation rendering in browser
+- **Desmos API / Plotly.js:** Interactive graph rendering
+- **jsPDF + html2canvas:** PDF generation
+- **Web Speech API:** Voice input (browser native)
 - **Tailwind CSS:** Styling
 
-### Chat Interface
+### Interface Layout
 
-- Conversational UI optimized for math questions
-- Messages display with LaTeX rendered inline
-- PDF export button for each response or full conversation
+Simple two-area layout:
 
-### Deployment
+```
+┌─────────────────────────────────────────────────────────┐
+│  Math Scribe                          [Export PDF] [👤] │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│                    WORKSPACE                            │
+│                                                         │
+│   Rendered equations and graphs appear here             │
+│   as the student dictates them                          │
+│                                                         │
+│              ┌─────────────────────┐                    │
+│              │   x + 3 = 7         │                    │
+│              │   x + 3 - 3 = 7 - 3 │                    │
+│              │   x = 4             │                    │
+│              └─────────────────────┘                    │
+│                                                         │
+├─────────────────────────────────────────────────────────┤
+│  AI: "Is that what you wanted?"        [Yes] [No/Undo]  │
+├─────────────────────────────────────────────────────────┤
+│  Type your instruction...                   [🎤] [Send]   │
+└─────────────────────────────────────────────────────────┘
+```
 
-- **Git Repository:** GitHub
-- **Auto Deploy:** Firebase Hosting CI/CD
-- **Build Command:** `npm run build`
+## Voice Input (Optional)
 
-## Authentication
+### Web Speech API Integration
 
-**Provider:** Firebase Auth
+```typescript
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = new SpeechRecognition();
 
-### Supported Methods
+recognition.continuous = true;
+recognition.interimResults = true;
+recognition.lang = 'en-US';
 
-- Google Sign-in (primary)
-- School SSO (future)
+recognition.onresult = (event) => {
+  const transcript = event.results[event.results.length - 1][0].transcript;
+  // Send to Claude for transcription
+};
+```
 
-### Integration
+### Voice Input UX
 
-- **SDK:** Firebase SDK in React
-- **Login UI:** Custom or Firebase UI
+- Microphone button available next to send button
+- Visual feedback when listening (pulsing indicator)
+- Shows interim transcription as student speaks
+- Optional alternative to typing
 
-### Post-Login
+## Equation Rendering (KaTeX)
 
-- **Get Token:** `firebase.auth().currentUser.getIdToken()`
-- **Send to Backend:** `Authorization: Bearer <ID_TOKEN>`
+### Supported Math
+
+KaTeX handles all 8th grade math and beyond:
+
+| Concept | Example |
+|---------|---------|
+| Basic operations | `x + 3 = 7` |
+| Fractions | `\frac{2}{3}x` |
+| Exponents | `x^2` |
+| Square roots | `\sqrt{x}` |
+| Subscripts | `x_1, y_2` |
+| Greek letters | `\pi, \theta` |
+
+### Implementation
+
+```typescript
+import 'katex/dist/katex.min.css';
+import { BlockMath } from 'react-katex';
+
+<BlockMath math="x + 3 = 7" />
+```
+
+## Graph Rendering (Desmos/Plotly)
+
+### Why In-Browser Graphing?
+
+- **Instant rendering** (no server compilation)
+- **Interactive** (zoom, pan, hover for coordinates)
+- **Accessible** (better than static images)
+- **Simpler architecture** (no LaTeX compilation server)
+
+### Desmos API Example
+
+```typescript
+const calculator = Desmos.GraphingCalculator(element, {
+  expressions: false,
+  settingsMenu: false,
+  zoomButtons: false
+});
+
+// Plot a point
+calculator.setExpression({ id: 'point1', latex: '(0, 1)', pointStyle: Desmos.Styles.POINT });
+
+// Draw a line
+calculator.setExpression({ id: 'line1', latex: 'y = \\frac{2}{3}x + 1' });
+```
+
+### Plotly.js Alternative
+
+```typescript
+import Plotly from 'plotly.js-dist';
+
+Plotly.newPlot('graph', [{
+  x: [0, 3],
+  y: [1, 3],
+  mode: 'lines+markers',
+  type: 'scatter'
+}], {
+  xaxis: { range: [-10, 10] },
+  yaxis: { range: [-10, 10] }
+});
+```
 
 ## Backend
 
 **Platform:** Firebase Functions
 **Language:** TypeScript / NodeJS
 
-### Function: askClaude
+### Function: transcribeMath
 
-Proxies requests to Claude API with system prompt injection.
-
-**Request Flow:**
-1. Receive request with Firebase ID token
-2. Validate token (reject if invalid)
-3. Load system prompt (math tutoring expertise from skill.md)
-4. Call Claude API with user message + system prompt
-5. Return Claude's response
-
-**Example Function Structure:**
+Proxies requests to Claude API with SKILL.md as system prompt.
 
 ```typescript
 import * as functions from 'firebase-functions';
 import Anthropic from '@anthropic-ai/sdk';
-import * as admin from 'firebase-admin';
 
-const anthropic = new Anthropic({
-  apiKey: functions.config().claude.api_key,
-});
+const SCRIBE_SYSTEM_PROMPT = `[Contents of SKILL.md]`;
 
-export const askClaude = functions.https.onCall(async (data, context) => {
-  // Verify authentication
+export const transcribeMath = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'Must be logged in');
   }
 
-  const { message, conversationHistory } = data;
+  const { instruction, currentWorkspace } = data;
+
+  const anthropic = new Anthropic({
+    apiKey: functions.config().claude.api_key,
+  });
 
   const response = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
-    max_tokens: 4096,
-    system: MATH_SCRIBE_SYSTEM_PROMPT,
+    max_tokens: 2048,
+    system: SCRIBE_SYSTEM_PROMPT,
     messages: [
-      ...conversationHistory,
-      { role: 'user', content: message }
+      {
+        role: 'user',
+        content: `Current workspace:\n${currentWorkspace}\n\nStudent says: "${instruction}"`
+      }
     ],
   });
 
   return {
-    content: response.content[0].text,
-    usage: response.usage,
+    action: response.content[0].text,
+    // AI response includes: what was written + confirmation question
   };
-});
-```
-
-### Future: User-Provided API Keys
-
-```typescript
-// Check if user has their own API key
-const userDoc = await admin.firestore().collection('users').doc(context.auth.uid).get();
-const userApiKey = userDoc.data()?.claudeApiKey;
-
-const client = new Anthropic({
-  apiKey: userApiKey || functions.config().claude.api_key,
 });
 ```
 
@@ -134,77 +232,64 @@ users/{uid}
   - email: string
   - displayName: string
   - createdAt: timestamp
-  - claudeApiKey?: string (encrypted, future)
 ```
 
-#### conversations
+#### workspaces
 ```
-conversations/{conversationId}
+workspaces/{workspaceId}
   - userId: string (uid)
   - title: string
+  - equations: string[] (KaTeX strings)
+  - graphState: object (Desmos/Plotly state)
   - createdAt: timestamp
   - updatedAt: timestamp
 ```
 
-#### messages
-```
-conversations/{conversationId}/messages/{messageId}
-  - role: 'user' | 'assistant'
-  - content: string
-  - createdAt: timestamp
-```
-
-## LaTeX Rendering
-
-### KaTeX Integration
-
-```typescript
-import 'katex/dist/katex.min.css';
-import { InlineMath, BlockMath } from 'react-katex';
-
-// Inline math: $x^2$
-<InlineMath math="x^2" />
-
-// Block math: $$\int_0^1 x^2 dx$$
-<BlockMath math="\int_0^1 x^2 dx" />
-```
-
-### Parsing Claude Responses
-
-Claude responses may contain LaTeX in `$...$` (inline) or `$$...$$` (block) delimiters. Parse and render accordingly:
-
-```typescript
-function renderMathContent(text: string) {
-  // Split by LaTeX delimiters and render appropriately
-  // Handle both inline ($...$) and block ($$...$$) math
-}
-```
-
 ## PDF Export
 
-### Using jsPDF + html2canvas
+### Generating Final Document
+
+When student says "I'm done":
+
+1. Capture workspace content
+2. Render equations and graphs
+3. Box the final answer
+4. Generate PDF with jsPDF
 
 ```typescript
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-async function exportToPDF(elementId: string, filename: string) {
+async function exportWorkspace(elementId: string) {
   const element = document.getElementById(elementId);
   const canvas = await html2canvas(element);
-  const imgData = canvas.toDataURL('image/png');
 
   const pdf = new jsPDF();
-  pdf.addImage(imgData, 'PNG', 10, 10);
-  pdf.save(`${filename}.pdf`);
+  pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10);
+  pdf.save('math-scribe-work.pdf');
 }
+```
+
+## Authentication
+
+**Provider:** Firebase Auth
+
+### Supported Methods
+
+- Google Sign-in (primary)
+
+### Post-Login
+
+```typescript
+const token = await firebase.auth().currentUser.getIdToken();
+// Send to backend: Authorization: Bearer <token>
 ```
 
 ## Security
 
-- **Claude API Key:** Stored in Firebase Functions config, never exposed to frontend
-- **Firebase ID Tokens:** Validated on every API request
-- **Firestore Rules:** Users can only access their own conversations
-- **User API Keys (Future):** Encrypted at rest in Firestore
+- **Claude API Key:** Stored only in Firebase Functions config
+- **Firebase ID Tokens:** Validated on every request
+- **Firestore Rules:** Users can only access their own workspaces
 
 ### Firestore Security Rules
 
@@ -215,13 +300,9 @@ service cloud.firestore {
     match /users/{uid} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
-    match /conversations/{conversationId} {
+    match /workspaces/{workspaceId} {
       allow read, write: if request.auth != null &&
         resource.data.userId == request.auth.uid;
-      match /messages/{messageId} {
-        allow read, write: if request.auth != null &&
-          get(/databases/$(database)/documents/conversations/$(conversationId)).data.userId == request.auth.uid;
-      }
     }
   }
 }
@@ -229,22 +310,22 @@ service cloud.firestore {
 
 ## Q&A Summary
 
-### Why Claude API instead of OpenAI?
+### Why voice input?
 
-The math tutoring expertise (skill.md) was developed for Claude and works best with Claude's capabilities for structured math content and LaTeX generation.
+The student has cerebral palsy and may have difficulty typing. Voice is the most accessible input method.
 
-### Why Firebase Functions instead of Google Cloud Functions directly?
+### Why Desmos/Plotly instead of TikZ?
 
-Firebase Functions integrate seamlessly with Firebase Auth token validation and Firestore. Same underlying infrastructure, simpler setup.
+TikZ requires server-side LaTeX compilation (complex, slow, costly). In-browser graphing is instant, interactive, and more accessible.
 
-### Can users bring their own API keys?
+### Why does the AI never help?
 
-Yes, this is a planned feature. Users would store their encrypted API key in Firestore, and the function would use it instead of the default key.
+This is an accommodation, not tutoring. The student must learn by doing their own work. The AI is their hands, not their brain. If the AI corrected mistakes, the student wouldn't learn.
 
-### Why KaTeX over MathJax?
+### Why confirm after every action?
 
-KaTeX is faster for rendering and works well for most mathematical notation. MathJax can be used as a fallback for edge cases if needed.
+The AI might misinterpret spoken instructions. Confirmation ensures the student gets exactly what they intended.
 
-### How do I handle LaTeX errors?
+### Can this be used for other students?
 
-KaTeX has an `errorColor` option and can render errors inline. Wrap rendering in try-catch and display fallback for malformed LaTeX.
+Yes—any student who needs writing assistance due to physical disability, injury, or other accommodation needs.

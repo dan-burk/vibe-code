@@ -1,11 +1,18 @@
 # Math Scribe App Template
 
-A React + Firebase AI-powered math tutoring application that helps students and teachers write mathematical content. Features LaTeX rendering in-browser and PDF export functionality, powered by Claude API.
+An accessibility tool that acts as a faithful mathematical scribe for students who cannot write legibly. The AI writes EXACTLY what the student dictates—never correcting, teaching, or helping—preserving complete student agency over their learning.
+
+## Purpose
+
+This is NOT a tutoring app. It's an **accessibility accommodation** for a student with cerebral palsy who cannot write legibly. The AI is the student's **hands**, not their **brain**.
+
+**Core principle:** Write exactly what the student says, even if mathematically wrong. The student learns from their own mistakes.
 
 ## Template Documentation
 
-- [App Overview](./app_overview.md) - Complete technical architecture and Q&A
+- [App Overview](./app_overview.md) - Technical architecture and Q&A
 - [App Requirements](./app_requirements.md) - UI/UX specifications and user flow
+- [SKILL.md](./SKILL.md) - Complete scribe behavior specification (system prompt)
 
 ## Tech Stack
 
@@ -13,12 +20,14 @@ A React + Firebase AI-powered math tutoring application that helps students and 
 - **Framework:** ReactJS (Vite + TypeScript)
 - **Hosting:** Firebase Hosting
 - **Styling:** Tailwind CSS
-- **LaTeX Rendering:** KaTeX (or MathJax)
+- **Equation Rendering:** KaTeX
+- **Graph Rendering:** Desmos API or Plotly.js (interactive, accessible graphs)
 - **PDF Generation:** jsPDF + html2canvas
+- **Voice Input:** Web Speech API (SpeechRecognition)
 
 ### Authentication
 - **Provider:** Firebase Auth
-- **Methods:** Google Sign-in (SSO planned for future)
+- **Methods:** Google Sign-in
 
 ### Backend
 - **Platform:** Firebase Functions
@@ -28,19 +37,16 @@ A React + Firebase AI-powered math tutoring application that helps students and 
 ### Database
 - **Type:** Firebase Firestore
 
-### Domain
-- **Provider:** Custom domain (configurable)
-
 ## Key Features
 
-- Chat-style interface optimized for math tutoring
-- LaTeX rendering in real-time (KaTeX)
-- PDF export button for generated content
-- Firebase-powered Google authentication
-- Protected backend API calls via Firebase Functions
-- Conversation history storage
-- System prompt based on skill.md expertise
-- Future: User-provided API keys option
+- **Text input** (primary) - Student types instructions
+- **Voice input** (optional) - For students who prefer or need to speak
+- **Faithful transcription** - AI writes EXACTLY what's dictated, even if wrong
+- **Confirmation after every action** - "Is that what you wanted?"
+- **KaTeX equation rendering** - Beautiful inline/block math
+- **Interactive graphing** - Desmos/Plotly for coordinate planes and functions
+- **PDF export** - Download completed work with boxed final answer
+- **Never helps** - AI asks "What's the formula?" instead of providing it
 
 ## Architecture
 
@@ -49,26 +55,44 @@ React App (Vite + TypeScript)
     │
     ├── Firebase Auth (Google Sign-in)
     │
-    ├── KaTeX (LaTeX rendering in browser)
+    ├── Web Speech API (Voice input)
     │
-    ├── jsPDF (PDF generation on demand)
+    ├── KaTeX (Equation rendering)
+    │
+    ├── Desmos/Plotly (Graph rendering)
+    │
+    ├── jsPDF (PDF export)
     │
     └── Firebase Function (API proxy)
             │
             ├── Validates Firebase ID token
-            ├── Loads system prompt (skill.md content)
+            ├── Loads system prompt (SKILL.md content)
             └── Calls Claude API
                     │
-                    └── Returns LaTeX/math content
+                    └── Returns scribe response
 ```
+
+## Scribe Behavior (from SKILL.md)
+
+### What the AI DOES:
+- Write exactly what the student dictates
+- Ask clarifying questions when ambiguous ("Where should I put that point?")
+- Confirm after each action ("Is that what you wanted?")
+- Ask student for formulas ("What's the slope formula?")
+- Ask where each number goes in substitutions
+
+### What the AI NEVER does:
+- Correct errors
+- Provide formulas
+- Skip ahead or anticipate
+- Hint at mistakes
+- Teach unless explicitly asked
 
 ## Getting Started with This Template
 
 ### Prerequisites
 
 - Node.js and npm installed
-- VSCode or preferred code editor
-- Git installed
 - Firebase account
 - Anthropic API key (Claude)
 
@@ -76,20 +100,15 @@ React App (Vite + TypeScript)
 
 #### Step 1: Project Setup
 
-1. Clone or fork a React starter template (Vite + React + TypeScript)
-2. Reference this template documentation for implementation guidance
-
-#### Step 2: Local Development Setup
-
 ```bash
 cd app
 npm install
 npm run dev
 ```
 
-#### Step 3: Firebase Configuration
+#### Step 2: Firebase Configuration
 
-Create a `.env` file in the app directory:
+Create a `.env` file:
 
 ```env
 VITE_FIREBASE_API_KEY=your_api_key
@@ -100,87 +119,63 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 ```
 
-#### Step 4: Firebase Functions Setup
-
-1. Initialize Firebase Functions in your project
-2. Create a function to proxy Claude API calls
-3. Store Claude API key in Firebase Functions config:
-   ```bash
-   firebase functions:config:set claude.api_key="your_claude_api_key"
-   ```
-4. Validate Firebase ID tokens in the function
-
-#### Step 5: Install Math/PDF Dependencies
+#### Step 3: Install Dependencies
 
 ```bash
 npm install katex react-katex
+npm install desmos  # or plotly.js
 npm install jspdf html2canvas
 ```
 
-#### Step 6: System Prompt Setup
+#### Step 4: Firebase Functions Setup
 
-Convert your skill.md content into a system prompt constant:
+1. Initialize Firebase Functions
+2. Store Claude API key:
+   ```bash
+   firebase functions:config:set claude.api_key="your_claude_api_key"
+   ```
+3. Create function that loads SKILL.md as system prompt
+
+#### Step 5: Voice Input Setup
+
+Use Web Speech API for voice recognition:
 
 ```typescript
-// src/utils/systemPrompt.ts
-export const MATH_SCRIBE_SYSTEM_PROMPT = `
-[Your skill.md content here - the math tutoring expertise]
-`;
+const recognition = new webkitSpeechRecognition();
+recognition.continuous = true;
+recognition.interimResults = true;
 ```
-
-### Development Workflow
-
-1. Make changes and test locally with `npm run dev`
-2. Update `app/CLAUDE.md` as new files are created
-3. Commit changes frequently
 
 ## Security
 
-- **API Keys:** Claude API key stored only in Firebase Functions config (never in frontend)
+- **API Keys:** Claude API key stored only in Firebase Functions config
 - **Backend Protection:** Firebase Functions validate Firebase ID tokens
 - **Firestore Rules:** Access controlled by user UID
-- **User API Keys (Future):** Stored encrypted in Firestore, never exposed to client
 
-## Core Features
+## Core Features Checklist
 
-- [x] Chat interface for math tutoring
-- [x] LaTeX rendering with KaTeX
-- [x] PDF export functionality
-- [x] Google authentication
-- [x] Conversation history
-- [x] Claude API integration
+- [ ] Text input (primary)
+- [ ] Voice input (optional, Web Speech API)
+- [ ] KaTeX equation rendering
+- [ ] Desmos/Plotly graph rendering
+- [ ] Confirmation UI ("Is that what you wanted?")
+- [ ] PDF export with boxed final answer
+- [ ] Google authentication
+- [ ] Claude API integration with SKILL.md prompt
 
 ## Stretch Goals
 
-- [ ] User-provided API keys option
-- [ ] School SSO integration
-- [ ] Multiple conversation threads
-- [ ] Template library for common math problems
-- [ ] Dark/light mode toggle
-- [ ] Export to multiple formats (LaTeX source, PDF, PNG)
-- [ ] Collaborative editing (teacher + student)
-- [ ] Math notation input palette
+- [ ] Multiple workspaces/sessions
+- [ ] Export to LaTeX source
+- [ ] Teacher view mode
+- [ ] Offline support
+- [ ] Dark mode
 
 ## Resources
 
 - [Firebase Documentation](https://firebase.google.com/docs)
-- [React Documentation](https://react.dev)
 - [KaTeX Documentation](https://katex.org/docs/api.html)
-- [jsPDF Documentation](https://rawgit.com/MrRio/jsPDF/master/docs/)
+- [Desmos API](https://www.desmos.com/api)
+- [Plotly.js Documentation](https://plotly.com/javascript/)
+- [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API)
 - [Claude API Documentation](https://docs.anthropic.com/claude/reference)
-- [Tailwind CSS](https://tailwindcss.com/docs)
-
-## Implementation Status
-
-When implementing this template, update this section:
-
-- [ ] Frontend setup (React + Vite + TypeScript)
-- [ ] Tailwind CSS configuration
-- [ ] Firebase Auth (Google Sign-in)
-- [ ] KaTeX integration
-- [ ] PDF export functionality
-- [ ] Firebase Functions setup
-- [ ] Claude API integration
-- [ ] System prompt configuration
-- [ ] Firestore conversation storage
-- [ ] Production deployment
