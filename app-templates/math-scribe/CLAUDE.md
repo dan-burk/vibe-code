@@ -1,6 +1,6 @@
-# AI Data Science App Template
+# Math Scribe App Template
 
-A React + Firebase AI Assistant web application that allows unauthenticated users to make limited API calls, then prompts them to log in using Firebase Auth. The backend is built using serverless Google Cloud Functions, protected by Firebase ID tokens, with data stored in Firebase Firestore.
+A React + Firebase AI-powered math tutoring application that helps students and teachers write mathematical content. Features LaTeX rendering in-browser and PDF export functionality, powered by Claude API.
 
 ## Template Documentation
 
@@ -13,99 +13,83 @@ A React + Firebase AI Assistant web application that allows unauthenticated user
 - **Framework:** ReactJS (Vite + TypeScript)
 - **Hosting:** Firebase Hosting
 - **Styling:** Tailwind CSS
+- **LaTeX Rendering:** KaTeX (or MathJax)
+- **PDF Generation:** jsPDF + html2canvas
 
 ### Authentication
 - **Provider:** Firebase Auth
-- **Methods:** Google, Email/Password, Anonymous, Microsoft, Facebook
+- **Methods:** Google Sign-in (SSO planned for future)
 
 ### Backend
-- **Platform:** Google Cloud Functions
-- **Language:** NodeJS
-- **API Integration:** OpenAI API
+- **Platform:** Firebase Functions
+- **Language:** NodeJS / TypeScript
+- **API Integration:** Claude API (Anthropic)
 
 ### Database
 - **Type:** Firebase Firestore
 
 ### Domain
-- **Provider:** GoDaddy (or custom domain provider)
-- **Custom Domain:** mycoolapp.com (configurable)
+- **Provider:** Custom domain (configurable)
 
 ## Key Features
 
-- Clean two-panel interface (input/output)
-- Limited unauthenticated access (2 API calls)
-- Firebase-powered authentication
-- Protected backend API calls via Cloud Functions
-- Usage tracking and rate limiting
-- Mobile responsive design
-- Professional UI inspired by RTutor.ai, Julius.ai, and DeepNote
+- Chat-style interface optimized for math tutoring
+- LaTeX rendering in real-time (KaTeX)
+- PDF export button for generated content
+- Firebase-powered Google authentication
+- Protected backend API calls via Firebase Functions
+- Conversation history storage
+- System prompt based on skill.md expertise
+- Future: User-provided API keys option
+
+## Architecture
+
+```
+React App (Vite + TypeScript)
+    │
+    ├── Firebase Auth (Google Sign-in)
+    │
+    ├── KaTeX (LaTeX rendering in browser)
+    │
+    ├── jsPDF (PDF generation on demand)
+    │
+    └── Firebase Function (API proxy)
+            │
+            ├── Validates Firebase ID token
+            ├── Loads system prompt (skill.md content)
+            └── Calls Claude API
+                    │
+                    └── Returns LaTeX/math content
+```
 
 ## Getting Started with This Template
 
 ### Prerequisites
 
 - Node.js and npm installed
-- VSCode or your preferred code editor
-- Git installed (for version control)
-- Firebase account (for backend services)
-- GCP account (for Cloud Functions)
+- VSCode or preferred code editor
+- Git installed
+- Firebase account
+- Anthropic API key (Claude)
 
 ### Implementation Steps
 
 #### Step 1: Project Setup
 
-Choose one of these options:
-
-**Option A: Fork Base Repo**
-
-1. Fork a React starter template (e.g., Vite + React + TypeScript)
-2. Clone your forked repo to your local machine
-3. Reference this template documentation for implementation guidance
-
-**Option B: Clone and Customize**
-
-1. Clone a React starter template directly (e.g., Vite + React + TypeScript)
-2. Delete the `.git` folder to remove the original repo's version control
-3. Reference this template documentation for implementation guidance
+1. Clone or fork a React starter template (Vite + React + TypeScript)
+2. Reference this template documentation for implementation guidance
 
 #### Step 2: Local Development Setup
-
-Navigate to the app directory and install dependencies:
 
 ```bash
 cd app
 npm install
-```
-
-Start the development server:
-
-```bash
 npm run dev
 ```
 
-#### Step 3: Version Control Setup
+#### Step 3: Firebase Configuration
 
-1. Delete the preexisting `.git` folder (if using Option B)
-2. Initialize a new Git repository:
-
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-```
-
-3. Create a new repository on GitHub
-4. Link your local repo to GitHub:
-
-```bash
-git remote add origin https://github.com/yourusername/your-repo-name.git
-git branch -M main
-git push -u origin main
-```
-
-#### Step 4: Firebase Configuration
-
-Create a `.env` file in the app directory with:
+Create a `.env` file in the app directory:
 
 ```env
 VITE_FIREBASE_API_KEY=your_api_key
@@ -116,92 +100,87 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 ```
 
-#### Step 5: Backend Setup
+#### Step 4: Firebase Functions Setup
 
-1. Set up Google Cloud Functions
-2. Configure Firebase ID token validation
-3. Integrate OpenAI API
-4. Set up Firestore database
+1. Initialize Firebase Functions in your project
+2. Create a function to proxy Claude API calls
+3. Store Claude API key in Firebase Functions config:
+   ```bash
+   firebase functions:config:set claude.api_key="your_claude_api_key"
+   ```
+4. Validate Firebase ID tokens in the function
 
-#### Step 6: Iteration Process
+#### Step 5: Install Math/PDF Dependencies
 
-Once your development server is running:
-
-1. Make changes to your React prototype
-2. Test locally with `npm run dev`
-3. Update `app/CLAUDE.md` if new files are created
-4. Commit changes frequently to GitHub
-
-### Important Tips
-
-- **Keep context updated:** Maintain `app/CLAUDE.md` as the backbone of organization
-- **Commit frequently:** Think of this as saving your work
-- **Test locally:** Always verify changes work before committing
-- **Document changes:** Keep documentation up to date
-
-## Development Workflow
-
-### Making Changes
-
-1. Create a new branch for features:
 ```bash
-git checkout -b feature/your-feature-name
+npm install katex react-katex
+npm install jspdf html2canvas
 ```
 
-2. Make your changes and test locally
+#### Step 6: System Prompt Setup
 
-3. Commit your changes:
-```bash
-git add .
-git commit -m "Description of changes"
+Convert your skill.md content into a system prompt constant:
+
+```typescript
+// src/utils/systemPrompt.ts
+export const MATH_SCRIBE_SYSTEM_PROMPT = `
+[Your skill.md content here - the math tutoring expertise]
+`;
 ```
 
-4. Push to GitHub:
-```bash
-git push origin feature/your-feature-name
-```
+### Development Workflow
 
-### File Naming Conventions
-
-When working with files, ensure proper naming:
-- `main_tsx.tsx` → `main.tsx`
-- `globals_css.css` → `globals.css`
-- `input_panel_tsx.ts` → `InputPanel.tsx`
+1. Make changes and test locally with `npm run dev`
+2. Update `app/CLAUDE.md` as new files are created
+3. Commit changes frequently
 
 ## Security
 
-- **API Keys:** Never store secrets in frontend code
-- **Backend Protection:** Cloud Functions validate Firebase ID tokens
+- **API Keys:** Claude API key stored only in Firebase Functions config (never in frontend)
+- **Backend Protection:** Firebase Functions validate Firebase ID tokens
 - **Firestore Rules:** Access controlled by user UID
-- **Rate Limiting:** Anonymous (2 calls max), Authenticated (UID-based)
+- **User API Keys (Future):** Stored encrypted in Firestore, never exposed to client
+
+## Core Features
+
+- [x] Chat interface for math tutoring
+- [x] LaTeX rendering with KaTeX
+- [x] PDF export functionality
+- [x] Google authentication
+- [x] Conversation history
+- [x] Claude API integration
 
 ## Stretch Goals
 
-- [ ] History tab for previous inputs/outputs
-- [ ] Rate limiting and usage quotas
-- [ ] User profiles and preferences in Firestore
-- [ ] Share/export output functionality (copy to clipboard, download)
-- [ ] UI polish (loading animations, error messages)
+- [ ] User-provided API keys option
+- [ ] School SSO integration
+- [ ] Multiple conversation threads
+- [ ] Template library for common math problems
 - [ ] Dark/light mode toggle
-- [ ] Multi-language support
+- [ ] Export to multiple formats (LaTeX source, PDF, PNG)
+- [ ] Collaborative editing (teacher + student)
+- [ ] Math notation input palette
 
 ## Resources
 
 - [Firebase Documentation](https://firebase.google.com/docs)
 - [React Documentation](https://react.dev)
-- [Google Cloud Functions](https://cloud.google.com/functions/docs)
+- [KaTeX Documentation](https://katex.org/docs/api.html)
+- [jsPDF Documentation](https://rawgit.com/MrRio/jsPDF/master/docs/)
+- [Claude API Documentation](https://docs.anthropic.com/claude/reference)
 - [Tailwind CSS](https://tailwindcss.com/docs)
-- [OpenAI API](https://platform.openai.com/docs)
 
 ## Implementation Status
 
-When implementing this template, update this section to track progress:
+When implementing this template, update this section:
 
-- [ ] Frontend setup
-- [ ] Firebase authentication
-- [ ] Backend Cloud Functions
-- [ ] Firestore database
-- [ ] OpenAI integration
-- [ ] Rate limiting
-- [ ] Domain configuration
+- [ ] Frontend setup (React + Vite + TypeScript)
+- [ ] Tailwind CSS configuration
+- [ ] Firebase Auth (Google Sign-in)
+- [ ] KaTeX integration
+- [ ] PDF export functionality
+- [ ] Firebase Functions setup
+- [ ] Claude API integration
+- [ ] System prompt configuration
+- [ ] Firestore conversation storage
 - [ ] Production deployment

@@ -55,6 +55,40 @@ template-name/
 
 ---
 
+### 2. Math Scribe (`math-scribe/`)
+
+**Type:** React + Firebase + Claude API Integration
+
+**Description:** An AI-powered math tutoring application that helps students and teachers write mathematical content. Features real-time LaTeX rendering and PDF export functionality.
+
+**Tech Stack:**
+- Frontend: React (Vite + TypeScript), Tailwind CSS, KaTeX, jsPDF
+- Auth: Firebase Auth (Google Sign-in)
+- Backend: Firebase Functions (TypeScript)
+- Database: Firestore
+- AI: Claude API (Anthropic)
+
+**Key Features:**
+- Chat-style interface for math tutoring
+- Real-time LaTeX rendering with KaTeX
+- PDF export of conversations
+- Conversation history storage
+- System prompt based on skill.md expertise
+- Future: User-provided API keys
+
+**Use Cases:**
+- Math tutoring for students
+- Teacher assistance for creating math content
+- Step-by-step problem solving
+- LaTeX document generation
+
+**Documentation:**
+- [Complete Guide](./math-scribe/CLAUDE.md)
+- [Technical Overview](./math-scribe/app_overview.md)
+- [Requirements](./math-scribe/app_requirements.md)
+
+---
+
 ## Using a Template
 
 ### Step 1: Choose Your Template

@@ -2,34 +2,41 @@
 
 ## Application Details
 
-**Name:** React + Firebase AI Assistant
+**Name:** Math Scribe
 
-**Description:** A web app built in ReactJS that allows unauthenticated users to make limited API calls, then prompts them to log in using Firebase Auth. The backend is built using serverless Google Cloud Functions, protected by Firebase ID tokens. Data is stored in Firebase Firestore.
+**Description:** An AI-powered math tutoring application that helps students and teachers write mathematical content. Built with React and Firebase, it features real-time LaTeX rendering and PDF export, powered by Claude API through a secure Firebase Functions backend.
 
 ### Goals
 
-- Create a scalable, low-cost prototype
-- Use a custom domain purchased from GoDaddy called mycoolapp.com
-- Limit access to backend API calls until user logs in
-- Support anonymous and authenticated usage
-- Integrate OpenAI API calls from a protected backend
-- Use React on the frontend with minimal hosting setup
+- Create a focused math tutoring assistant
+- Render LaTeX beautifully in the browser
+- Enable PDF export of generated content
+- Use Google Sign-in for simple authentication
+- Secure Claude API calls through Firebase Functions
+- Store conversation history in Firestore
+- Future: Allow users to provide their own API keys
 
 ## Frontend
 
-**Framework:** ReactJS
+**Framework:** ReactJS (Vite + TypeScript)
 **Hosting:** Firebase Hosting
 
-### Login Flow
+### Key Libraries
 
-- **Pre-login limit:** 2 API calls
-- **Auth prompt after limit:** Yes
-- **Tracking method:** localStorage and anonymous Firebase UID
+- **KaTeX:** Fast LaTeX rendering in browser
+- **jsPDF + html2canvas:** PDF generation from rendered content
+- **Tailwind CSS:** Styling
+
+### Chat Interface
+
+- Conversational UI optimized for math questions
+- Messages display with LaTeX rendered inline
+- PDF export button for each response or full conversation
 
 ### Deployment
 
 - **Git Repository:** GitHub
-- **Auto Deploy:** Yes
+- **Auto Deploy:** Firebase Hosting CI/CD
 - **Build Command:** `npm run build`
 
 ## Authentication
@@ -38,16 +45,13 @@
 
 ### Supported Methods
 
-- Google
-- Email/Password
-- Anonymous
-- Microsoft
-- Facebook
+- Google Sign-in (primary)
+- School SSO (future)
 
 ### Integration
 
 - **SDK:** Firebase SDK in React
-- **Login UI:** Uses Firebase UI (customizable and professional)
+- **Login UI:** Custom or Firebase UI
 
 ### Post-Login
 
@@ -56,84 +60,191 @@
 
 ## Backend
 
-**Platform:** Google Cloud Functions
-**Language:** NodeJS
+**Platform:** Firebase Functions
+**Language:** TypeScript / NodeJS
 
-### Authentication Strategy
+### Function: askClaude
 
-Function is public, but validates Firebase ID token
+Proxies requests to Claude API with system prompt injection.
 
-### Example Logic
+**Request Flow:**
+1. Receive request with Firebase ID token
+2. Validate token (reject if invalid)
+3. Load system prompt (math tutoring expertise from skill.md)
+4. Call Claude API with user message + system prompt
+5. Return Claude's response
 
-1. If request has valid Firebase ID token then allow request
-2. If not logged in, allow up to 2 calls (via IP or anonymous UID)
-3. After limit reached, return 403 and show login screen
+**Example Function Structure:**
 
-### API Calls
+```typescript
+import * as functions from 'firebase-functions';
+import Anthropic from '@anthropic-ai/sdk';
+import * as admin from 'firebase-admin';
 
-#### askAI
+const anthropic = new Anthropic({
+  apiKey: functions.config().claude.api_key,
+});
 
-- **Integration:** OpenAI API
-- **Authentication Required:** Yes
-- **Usage Limited:** Yes
+export const askClaude = functions.https.onCall(async (data, context) => {
+  // Verify authentication
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Must be logged in');
+  }
+
+  const { message, conversationHistory } = data;
+
+  const response = await anthropic.messages.create({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 4096,
+    system: MATH_SCRIBE_SYSTEM_PROMPT,
+    messages: [
+      ...conversationHistory,
+      { role: 'user', content: message }
+    ],
+  });
+
+  return {
+    content: response.content[0].text,
+    usage: response.usage,
+  };
+});
+```
+
+### Future: User-Provided API Keys
+
+```typescript
+// Check if user has their own API key
+const userDoc = await admin.firestore().collection('users').doc(context.auth.uid).get();
+const userApiKey = userDoc.data()?.claudeApiKey;
+
+const client = new Anthropic({
+  apiKey: userApiKey || functions.config().claude.api_key,
+});
+```
 
 ## Database
 
 **Type:** Firebase Firestore
 
-### Usage
+### Collections
 
-- Store user profiles
-- Track anonymous and logged-in usage counts
-- Save API call history
-- Store user messages
+#### users
+```
+users/{uid}
+  - email: string
+  - displayName: string
+  - createdAt: timestamp
+  - claudeApiKey?: string (encrypted, future)
+```
 
-## Domain
+#### conversations
+```
+conversations/{conversationId}
+  - userId: string (uid)
+  - title: string
+  - createdAt: timestamp
+  - updatedAt: timestamp
+```
 
-**Provider:** GoDaddy
+#### messages
+```
+conversations/{conversationId}/messages/{messageId}
+  - role: 'user' | 'assistant'
+  - content: string
+  - createdAt: timestamp
+```
 
-### DNS Setup
+## LaTeX Rendering
 
-- **Pointing to:** Firebase Hosting
-- **Using:** A/AAAA or CNAME records
+### KaTeX Integration
 
-## Rate Limiting
+```typescript
+import 'katex/dist/katex.min.css';
+import { InlineMath, BlockMath } from 'react-katex';
 
-- **Anonymous:** Max 2 calls via IP, device ID, or localStorage
-- **Authenticated:** Rate limit by Firebase UID or upgrade tier
+// Inline math: $x^2$
+<InlineMath math="x^2" />
+
+// Block math: $$\int_0^1 x^2 dx$$
+<BlockMath math="\int_0^1 x^2 dx" />
+```
+
+### Parsing Claude Responses
+
+Claude responses may contain LaTeX in `$...$` (inline) or `$$...$$` (block) delimiters. Parse and render accordingly:
+
+```typescript
+function renderMathContent(text: string) {
+  // Split by LaTeX delimiters and render appropriately
+  // Handle both inline ($...$) and block ($$...$$) math
+}
+```
+
+## PDF Export
+
+### Using jsPDF + html2canvas
+
+```typescript
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+
+async function exportToPDF(elementId: string, filename: string) {
+  const element = document.getElementById(elementId);
+  const canvas = await html2canvas(element);
+  const imgData = canvas.toDataURL('image/png');
+
+  const pdf = new jsPDF();
+  pdf.addImage(imgData, 'PNG', 10, 10);
+  pdf.save(`${filename}.pdf`);
+}
+```
 
 ## Security
 
-- **Function Access:** Public endpoint + Firebase ID token validation
-- **Sensitive Keys:** Only stored and used on backend (never in frontend)
-- **User Data Access:** Firestore security rules by UID
+- **Claude API Key:** Stored in Firebase Functions config, never exposed to frontend
+- **Firebase ID Tokens:** Validated on every API request
+- **Firestore Rules:** Users can only access their own conversations
+- **User API Keys (Future):** Encrypted at rest in Firestore
+
+### Firestore Security Rules
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+    match /conversations/{conversationId} {
+      allow read, write: if request.auth != null &&
+        resource.data.userId == request.auth.uid;
+      match /messages/{messageId} {
+        allow read, write: if request.auth != null &&
+          get(/databases/$(database)/documents/conversations/$(conversationId)).data.userId == request.auth.uid;
+      }
+    }
+  }
+}
+```
 
 ## Q&A Summary
 
-### Can I replace a weird Google URL with a custom domain?
+### Why Claude API instead of OpenAI?
 
-Yes, point your GoDaddy domain to wherever your frontend is deployed (e.g., Firebase Hosting).
+The math tutoring expertise (skill.md) was developed for Claude and works best with Claude's capabilities for structured math content and LaTeX generation.
 
-### Do I need a backend for secret API keys?
+### Why Firebase Functions instead of Google Cloud Functions directly?
 
-Yes, never store secrets in frontend. Use a backend (e.g., GCP Cloud Function) to safely handle OpenAI API calls.
+Firebase Functions integrate seamlessly with Firebase Auth token validation and Firestore. Same underlying infrastructure, simpler setup.
 
-### Is Firebase good for auth + database + hosting?
+### Can users bring their own API keys?
 
-Yes. Firebase is ideal for startups on a budget and gives you integrated tools for fast prototyping.
+Yes, this is a planned feature. Users would store their encrypted API key in Firestore, and the function would use it instead of the default key.
 
-### Can I protect a Google Cloud Function without making it public?
+### Why KaTeX over MathJax?
 
-Not easily for frontend. The best practice is to make it public and validate the Firebase token inside.
+KaTeX is faster for rendering and works well for most mathematical notation. MathJax can be used as a fallback for edge cases if needed.
 
-### Can Firebase limit usage before requiring login?
+### How do I handle LaTeX errors?
 
-Yes. You can use anonymous auth, localStorage, or Cloud Function logic to limit pre-login usage.
-
-### Do Firebase Auth UIs look good?
-
-Yes. FirebaseUI provides clean, responsive login screens and supports easy integration.
-
-### Can GitHub auto-deploy to Firebase?
-
-Yes. Firebase Hosting supports GitHub-based CI/CD workflows for React apps.
+KaTeX has an `errorColor` option and can render errors inline. Wrap rendering in try-catch and display fallback for malformed LaTeX.
