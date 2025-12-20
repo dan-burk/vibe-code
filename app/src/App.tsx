@@ -3,7 +3,7 @@ import Layout from './components/layout/Layout'
 import Workspace from './components/ui/Workspace'
 import ConfirmationBar from './components/ui/ConfirmationBar'
 import InputBar from './components/ui/InputBar'
-import { getMockScribeResponse } from './services/mockScribe'
+import { scribeService } from './services/scribeService'
 import { exportWorkspaceToPDF } from './utils/pdfExport'
 import { INITIAL_GREETING, STORAGE_KEYS } from './utils/constants'
 import type {
@@ -181,6 +181,20 @@ function App() {
     setLastResponse(response)
   }, [])
 
+  // Connect to WebSocket on mount
+  useEffect(() => {
+    scribeService.connect().catch((error) => {
+      console.error('Failed to connect to backend:', error)
+      setConfirmationMessage(
+        "Couldn't connect to the server. Make sure the backend is running."
+      )
+    })
+
+    return () => {
+      scribeService.disconnect()
+    }
+  }, [])
+
   // Handle student instruction submission
   const handleSubmit = useCallback(
     async (instruction: string) => {
@@ -189,11 +203,11 @@ function App() {
       setIsLoading(true)
 
       try {
-        // Get current workspace state for context
-        const workspaceContext = workspaceItems.map((item) => item.content).join('\n')
-
-        // Get mock response (replace with actual API call later)
-        const response = await getMockScribeResponse(instruction, workspaceContext)
+        // Send instruction to backend via WebSocket
+        const response = await scribeService.sendInstruction(instruction, {
+          items: workspaceItems,
+          graphState,
+        })
 
         processScribeResponse(response)
       } catch (error) {
@@ -206,7 +220,7 @@ function App() {
         setIsLoading(false)
       }
     },
-    [isLoading, workspaceItems, processScribeResponse]
+    [isLoading, workspaceItems, graphState, processScribeResponse]
   )
 
   // Handle confirmation (Yes)

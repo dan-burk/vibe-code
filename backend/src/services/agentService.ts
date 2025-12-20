@@ -1,4 +1,4 @@
-import { query, ClaudeAgentOptions } from '@anthropic-ai/claude-agent-sdk';
+import { query, type Options } from '@anthropic-ai/claude-agent-sdk';
 import type { ScribeResponse, WorkspaceState } from '../types/index.js';
 
 /**
@@ -75,13 +75,14 @@ export async function* processInstruction(
 ): AsyncGenerator<ScribeResponse> {
   const workspaceContext = formatWorkspaceContext(workspaceState);
 
-  const options: ClaudeAgentOptions = {
+  const options: Options = {
     // Use project settings to load SKILL.md from .claude/skills/
     settingSources: ['project'],
     // Only allow the Skill tool - no file system access
     allowedTools: [],
     // Bypass permissions since we're running in a controlled backend
     permissionMode: 'bypassPermissions',
+    allowDangerouslySkipPermissions: true,
     // Limit turns to prevent runaway loops
     maxTurns: 5,
     // Resume from previous session if available
