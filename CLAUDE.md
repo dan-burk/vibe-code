@@ -1,5 +1,7 @@
 # Vibe Code Project Context
 
+  The full plan is in /home/daniel/.claude/plans/smooth-giggling-kahn.md.
+
 This is a multi-template web application development project organized for efficient prototyping and implementation.
 
 ## Project Organization
