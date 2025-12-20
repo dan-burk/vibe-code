@@ -188,18 +188,18 @@ function App() {
     }
 
     // Update confirmation state
-    if (response.text && response.text.includes('?')) {
+    // Only show Yes/No/Undo buttons if AI actually did something (scribed latex, graph action, or finished)
+    const didScribe = response.latex || response.graph || response.finished;
+    if (response.text && response.text.includes('?') && didScribe) {
       setConfirmationState('awaiting');
       setConfirmationMessage(response.text);
-    } else if (confirmationState !== 'awaiting') {
-      // Only update if we are not currently waiting for a user confirmation
-      setConfirmationState('none');
-      if (response.text) {
-        setConfirmationMessage(response.text);
-      }
+    } else if (response.text) {
+      // For messages without scribing (like clarifying questions), show message without buttons
+      setConfirmationState((prev) => prev === 'awaiting' ? prev : 'confirmed');
+      setConfirmationMessage(response.text);
     }
     setLastResponse(response);
-  }, [confirmationState])
+  }, [])
 
   // Connect to WebSocket on mount
   useEffect(() => {
@@ -219,6 +219,9 @@ function App() {
   const handleSubmit = useCallback(
     (instruction: string) => {
       if (isLoading) return
+
+      // Clear any existing confirmation message
+      setConfirmationState('none')
 
       const userMessage: ConversationMessage = {
         id: generateId(),
@@ -269,7 +272,6 @@ function App() {
   const handleConfirm = useCallback(() => {
     setConfirmationState('confirmed')
     setConfirmationMessage("Got it. What's next?")
-    setTimeout(() => setConfirmationState('none'), 1500)
   }, [])
 
   // Handle rejection (No / Undo)
@@ -310,30 +312,30 @@ function App() {
       onExportPDF={handleExportPDF}
       isFinished={isFinished}
     >
-      <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full px-4 sm:px-6 py-6 gap-4">
-        {/* Workspace - Main area for equations and graphs */}
+      <div className="flex-1 flex flex-col w-full px-6 py-6">
+        {/* Workspace - Main area for equations, graphs, and controls */}
         <Workspace
           items={workspaceItems}
           conversationHistory={conversationHistory}
           graphState={graphState}
           showGraph={showGraph}
-        />
+        >
+          {/* Confirmation Bar - Shows AI message and Yes/No buttons */}
+          <ConfirmationBar
+            message={confirmationMessage}
+            confirmationState={confirmationState}
+            onConfirm={handleConfirm}
+            onReject={handleReject}
+          />
 
-        {/* Confirmation Bar - Shows AI message and Yes/No buttons */}
-        <ConfirmationBar
-          message={confirmationMessage}
-          confirmationState={confirmationState}
-          onConfirm={handleConfirm}
-          onReject={handleReject}
-        />
-
-        {/* Input Bar - Text input for instructions */}
-        <InputBar
-          onSubmit={handleSubmit}
-          isLoading={isLoading}
-          disabled={confirmationState === 'awaiting'}
-          placeholder="Type your instruction..."
-        />
+          {/* Input Bar - Text input for instructions */}
+          <InputBar
+            onSubmit={handleSubmit}
+            isLoading={isLoading}
+            disabled={confirmationState === 'awaiting'}
+            placeholder="Type your instruction..."
+          />
+        </Workspace>
       </div>
     </Layout>
   )

@@ -1,5 +1,23 @@
 import { query, type Options } from '@anthropic-ai/claude-agent-sdk';
+import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import type { ScribeResponse, WorkspaceState } from '../types/index.js';
+
+// ESM directory resolution
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load skill content at startup (fail fast if missing)
+let SKILL_CONTENT: string;
+try {
+  const SKILL_PATH = join(__dirname, '../../.claude/skills/math-scribe/SKILL.md');
+  SKILL_CONTENT = readFileSync(SKILL_PATH, 'utf-8');
+  console.log(`Math Scribe skill loaded (${SKILL_CONTENT.length} bytes)`);
+} catch (error) {
+  console.error('FATAL: Could not load SKILL.md:', error);
+  process.exit(1);
+}
 
 /**
  * Parses Claude's JSON response into a ScribeResponse object.
@@ -84,31 +102,47 @@ export async function* processInstruction(
   const workspaceContext = formatWorkspaceContext(workspaceState);
 
   const options: Options = {
-    // Specify the model to use
     model: 'claude-opus-4-5',
-    // Use project settings to load SKILL.md from .claude/skills/
-    settingSources: ['project'],
-    // Only allow the Skill tool - no file system access
+    // No tools needed - scribe only writes what student says
     allowedTools: [],
     // Bypass permissions since we're running in a controlled backend
     permissionMode: 'bypassPermissions',
     allowDangerouslySkipPermissions: true,
-    // Limit turns to prevent runaway loops
-    maxTurns: 5,
-    // Resume from previous session if available
-    ...(sessionId && { resume: sessionId }),
+    // Scribe should respond in one turn
+    maxTurns: 1,
   };
 
-  // Build the prompt with workspace context
-  const prompt = `${workspaceContext}
+  // Build the prompt with embedded skill content
+  const prompt = `You ARE the mathematical scribe described below. Do not narrate. Do not explain your thinking. Simply respond as the scribe would.
 
-Student says: "${instruction}"
+<scribe-role>
+${SKILL_CONTENT}
+</scribe-role>
 
-Your task is to respond *only* with a single, valid JSON object in a markdown code block.
-The JSON object MUST conform to the format specified in the 'math-scribe' skill.
-Any other format or explanatory text outside the JSON block is forbidden.
+<critical-format-requirements>
+Your entire response must be a single valid JSON code block. Nothing else.
 
-Respond now.`;
+DO NOT output:
+- Any text before the JSON block
+- Any explanation of what you're doing
+- Any meta-commentary like "I need to apply..." or "As the scribe..."
+- Any text after the JSON block
+
+ONLY output:
+\`\`\`json
+{...your response...}
+\`\`\`
+</critical-format-requirements>
+
+<current-workspace>
+${workspaceContext}
+</current-workspace>
+
+<student-says>
+${instruction}
+</student-says>
+
+JSON response:`;
 
   try {
     for await (const message of query({
