@@ -139,6 +139,14 @@ wss.on('connection', async (ws: WebSocket) => {
 
           // Update workspace state if provided
           if (message.payload.workspaceState) {
+            // Ensure timestamps are Date objects
+            if (message.payload.workspaceState.items) {
+              message.payload.workspaceState.items.forEach(item => {
+                if (typeof item.timestamp === 'string') {
+                  item.timestamp = new Date(item.timestamp);
+                }
+              });
+            }
             currentSession.workspaceState = message.payload.workspaceState;
           }
 
@@ -150,15 +158,27 @@ wss.on('connection', async (ws: WebSocket) => {
           });
 
           // Process instruction with Claude
+          let lastResponse: ScribeResponse | null = null;
           for await (const response of processInstruction(
             message.payload.instruction,
             currentSession.workspaceState,
             currentSession.agentSessionId
           )) {
+            lastResponse = response;
+            console.log('Sending scribe_response payload:', JSON.stringify(response, null, 2));
             sendMessage(ws, {
               type: 'scribe_response',
               sessionId: currentSession.id,
               payload: response,
+            });
+          }
+
+          // Ensure a "finished" message is always sent
+          if (!lastResponse || !lastResponse.finished) {
+            sendMessage(ws, {
+              type: 'scribe_response',
+              sessionId: currentSession.id,
+              payload: { text: '', finished: true },
             });
           }
           break;

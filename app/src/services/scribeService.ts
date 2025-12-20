@@ -151,47 +151,71 @@ class ScribeService {
   }
 
   /**
-   * Send an instruction to the scribe
+   * Send an instruction to the scribe and handle streaming responses
    */
-  async sendInstruction(
+  sendInstruction(
     instruction: string,
-    workspaceState: WorkspaceState
-  ): Promise<ScribeResponse> {
+    workspaceState: WorkspaceState,
+    onResponse: (response: ScribeResponse) => void,
+    onFinish: () => void,
+    onError: (error: Error) => void
+  ): void {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      await this.connect()
-    }
-
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error('Request timed out'))
-      }, 60000) // 60 second timeout
-
-      const handler = (message: ServerMessage) => {
-        if (message.type === 'scribe_response') {
-          clearTimeout(timeout)
-          this.messageHandlers.delete(handler)
-          resolve(message.payload as ScribeResponse)
-        } else if (message.type === 'error') {
-          clearTimeout(timeout)
-          this.messageHandlers.delete(handler)
-          reject(new Error((message.payload as ErrorPayload).message))
-        }
-        // Ignore 'processing' messages, keep waiting
-      }
-
-      this.messageHandlers.add(handler)
-
-      this.ws!.send(
-        JSON.stringify({
-          type: 'instruction',
-          sessionId: this.sessionId,
-          payload: {
+      this.connect()
+        .then(() =>
+          this.sendInstruction(
             instruction,
             workspaceState,
-          },
-        })
-      )
-    })
+            onResponse,
+            onFinish,
+            onError
+          )
+        )
+        .catch(onError)
+      return
+    }
+
+    const handler = (message: ServerMessage) => {
+      if (message.type === 'scribe_response') {
+        const response = message.payload as ScribeResponse
+        onResponse(response)
+        if (response.finished) {
+          this.messageHandlers.delete(handler)
+          onFinish()
+        }
+      } else if (message.type === 'error') {
+        this.messageHandlers.delete(handler)
+        onError(new Error((message.payload as ErrorPayload).message))
+      }
+      // Note: We don't resolve/finish on 'processing'.
+      // The stream is considered finished only on `response.finished` or an error.
+    }
+
+    this.messageHandlers.add(handler)
+
+    // Add a timeout for the whole operation
+    const timeout = setTimeout(() => {
+      this.messageHandlers.delete(handler)
+      onError(new Error('Request timed out after 60 seconds'))
+    }, 60000)
+
+    // Clear timeout if the stream finishes properly
+    const originalOnFinish = onFinish
+    onFinish = () => {
+      clearTimeout(timeout)
+      originalOnFinish()
+    }
+
+    this.ws.send(
+      JSON.stringify({
+        type: 'instruction',
+        sessionId: this.sessionId,
+        payload: {
+          instruction,
+          workspaceState,
+        },
+      })
+    )
   }
 
   /**

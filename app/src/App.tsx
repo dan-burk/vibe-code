@@ -11,6 +11,7 @@ import type {
   GraphState,
   ConfirmationState,
   ScribeResponse,
+  ConversationMessage,
 } from './types/components'
 
 // Initial empty graph state
@@ -28,6 +29,7 @@ function App() {
   const [workspaceItems, setWorkspaceItems] = useState<WorkspaceItem[]>([])
   const [graphState, setGraphState] = useState<GraphState>(initialGraphState)
   const [showGraph, setShowGraph] = useState(false)
+  const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([])
 
   // Interaction state
   const [isLoading, setIsLoading] = useState(false)
@@ -68,6 +70,16 @@ function App() {
 
   // Process scribe response and update state
   const processScribeResponse = useCallback((response: ScribeResponse) => {
+    console.log('Received scribe response:', JSON.stringify(response, null, 2));
+    if (response.text) {
+      const assistantMessage: ConversationMessage = {
+        id: generateId(),
+        role: 'scribe',
+        content: response.text,
+        timestamp: new Date(),
+      };
+      setConversationHistory((prev) => [...prev, assistantMessage]);
+    }
     // Handle latex (equation)
     if (response.latex) {
       const newItem: WorkspaceItem = {
@@ -82,79 +94,83 @@ function App() {
 
     // Handle graph commands
     if (response.graph) {
-      const { action, data } = response.graph
+      const graphActions = Array.isArray(response.graph) ? response.graph : [response.graph];
 
-      switch (action) {
-        case 'add_point':
-          if (data?.x !== undefined && data?.y !== undefined) {
-            setGraphState((prev) => ({
-              ...prev,
-              points: [
-                ...prev.points,
-                {
-                  id: generateId(),
-                  x: data.x!,
-                  y: data.y!,
-                  label: data.label,
-                },
-              ],
-            }))
-            setShowGraph(true)
-          }
-          break
+      for (const graphAction of graphActions) {
+        const { action, data } = graphAction;
 
-        case 'add_line':
-          if (data?.points && data.points.length >= 2) {
-            setGraphState((prev) => ({
-              ...prev,
-              lines: [
-                ...prev.lines,
-                {
-                  id: generateId(),
-                  points: data.points!,
-                },
-              ],
-            }))
-            setShowGraph(true)
-          }
-          break
-
-        case 'add_function':
-          if (data?.latex) {
-            setGraphState((prev) => ({
-              ...prev,
-              functions: [
-                ...prev.functions,
-                {
-                  id: generateId(),
-                  latex: data.latex!,
-                },
-              ],
-            }))
-            setShowGraph(true)
-          }
-          break
-
-        case 'remove':
-          // Remove last item from appropriate array
-          setGraphState((prev) => {
-            if (prev.points.length > 0) {
-              return { ...prev, points: prev.points.slice(0, -1) }
+        switch (action) {
+          case 'add_point':
+            if (data?.x !== undefined && data?.y !== undefined) {
+              setGraphState((prev) => ({
+                ...prev,
+                points: [
+                  ...prev.points,
+                  {
+                    id: generateId(),
+                    x: data.x!,
+                    y: data.y!,
+                    label: data.label,
+                  },
+                ],
+              }));
+              setShowGraph(true);
             }
-            if (prev.lines.length > 0) {
-              return { ...prev, lines: prev.lines.slice(0, -1) }
-            }
-            if (prev.functions.length > 0) {
-              return { ...prev, functions: prev.functions.slice(0, -1) }
-            }
-            return prev
-          })
-          break
+            break;
 
-        case 'clear':
-          setGraphState(initialGraphState)
-          setShowGraph(true)
-          break
+          case 'add_line':
+            if (data?.points && data.points.length >= 2) {
+              setGraphState((prev) => ({
+                ...prev,
+                lines: [
+                  ...prev.lines,
+                  {
+                    id: generateId(),
+                    points: data.points!,
+                  },
+                ],
+              }));
+              setShowGraph(true);
+            }
+            break;
+
+          case 'add_function':
+            if (data?.latex) {
+              setGraphState((prev) => ({
+                ...prev,
+                functions: [
+                  ...prev.functions,
+                  {
+                    id: generateId(),
+                    latex: data.latex!,
+                  },
+                ],
+              }));
+              setShowGraph(true);
+            }
+            break;
+
+          case 'remove':
+            // Remove last item from appropriate array
+            setGraphState((prev) => {
+              if (prev.points.length > 0) {
+                return { ...prev, points: prev.points.slice(0, -1) };
+              }
+              if (prev.lines.length > 0) {
+                return { ...prev, lines: prev.lines.slice(0, -1) };
+              }
+              if (prev.functions.length > 0) {
+                return { ...prev, functions: prev.functions.slice(0, -1) };
+              }
+              return prev;
+            });
+            break;
+
+          case 'clear':
+            setGraphState(initialGraphState);
+            setShowGraph(true);
+            break;
+        }
       }
     }
 
@@ -172,14 +188,18 @@ function App() {
     }
 
     // Update confirmation state
-    if (response.text.includes('?')) {
-      setConfirmationState('awaiting')
-    } else {
-      setConfirmationState('none')
+    if (response.text && response.text.includes('?')) {
+      setConfirmationState('awaiting');
+      setConfirmationMessage(response.text);
+    } else if (confirmationState !== 'awaiting') {
+      // Only update if we are not currently waiting for a user confirmation
+      setConfirmationState('none');
+      if (response.text) {
+        setConfirmationMessage(response.text);
+      }
     }
-    setConfirmationMessage(response.text)
-    setLastResponse(response)
-  }, [])
+    setLastResponse(response);
+  }, [confirmationState])
 
   // Connect to WebSocket on mount
   useEffect(() => {
@@ -197,26 +217,48 @@ function App() {
 
   // Handle student instruction submission
   const handleSubmit = useCallback(
-    async (instruction: string) => {
+    (instruction: string) => {
       if (isLoading) return
 
+      const userMessage: ConversationMessage = {
+        id: generateId(),
+        role: 'student',
+        content: instruction,
+        timestamp: new Date(),
+      }
+      setConversationHistory((prev) => [...prev, userMessage])
       setIsLoading(true)
 
       try {
-        // Send instruction to backend via WebSocket
-        const response = await scribeService.sendInstruction(instruction, {
-          items: workspaceItems,
-          graphState,
-        })
-
-        processScribeResponse(response)
+        // Send instruction to backend via WebSocket using callbacks
+        scribeService.sendInstruction(
+          instruction,
+          { items: workspaceItems, graphState },
+          (response) => {
+            // Process each response as it streams in
+            processScribeResponse(response)
+          },
+          () => {
+            // onFinish
+            setIsLoading(false)
+          },
+          (error) => {
+            // onError
+            console.error('Error getting scribe response:', error)
+            setConfirmationMessage(
+              "I'm having trouble connecting. Could you say that again?"
+            )
+            setConfirmationState('none')
+            setIsLoading(false)
+          }
+        )
       } catch (error) {
-        console.error('Error getting scribe response:', error)
+        // Catch synchronous errors if sendInstruction itself fails
+        console.error('Error sending instruction:', error)
         setConfirmationMessage(
-          "I'm having trouble connecting. Could you say that again?"
+          'There was a problem sending your request.'
         )
         setConfirmationState('none')
-      } finally {
         setIsLoading(false)
       }
     },
@@ -272,6 +314,7 @@ function App() {
         {/* Workspace - Main area for equations and graphs */}
         <Workspace
           items={workspaceItems}
+          conversationHistory={conversationHistory}
           graphState={graphState}
           showGraph={showGraph}
         />

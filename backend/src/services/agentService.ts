@@ -3,28 +3,36 @@ import type { ScribeResponse, WorkspaceState } from '../types/index.js';
 
 /**
  * Parses Claude's JSON response into a ScribeResponse object.
- * The SKILL.md instructs Claude to output valid JSON.
+ * The SKILL.md instructs Claude to output valid JSON in a specific format.
+ * This function enforces that format.
  */
 function parseScribeResponse(text: string): ScribeResponse {
-  // Try to extract JSON from the response
+  console.log('Raw text from Claude agent:', text);
   try {
-    // Look for JSON object in the response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      return {
-        text: parsed.text || '',
-        latex: parsed.latex,
-        graph: parsed.graph,
-        finished: parsed.finished,
-      };
+    const codeBlockMatch = text.match(/```json\n([\s\S]*?)\n```/);
+    if (codeBlockMatch && codeBlockMatch[1]) {
+      const jsonString = codeBlockMatch[1];
+      const parsed = JSON.parse(jsonString);
+
+      // Check for the standard ScribeResponse format
+      if (parsed.text || parsed.latex || (parsed.graph && typeof parsed.graph === 'object')) {
+        return {
+          text: parsed.text || '',
+          latex: parsed.latex,
+          graph: parsed.graph,
+          finished: parsed.finished,
+        };
+      }
+
+      // Fallback for unknown formats
+      console.warn('Received valid JSON but unrecognized format from agent:', parsed);
+      return { text: `(Received unrecognized format: ${jsonString})` };
     }
   } catch (e) {
-    // JSON parsing failed, treat as plain text
     console.warn('Failed to parse JSON response:', e);
   }
 
-  // Fallback: treat entire response as text
+  // Fallback: treat entire response as text if no valid JSON block is found
   return { text: text.trim() };
 }
 
@@ -76,6 +84,8 @@ export async function* processInstruction(
   const workspaceContext = formatWorkspaceContext(workspaceState);
 
   const options: Options = {
+    // Specify the model to use
+    model: 'claude-opus-4-5',
     // Use project settings to load SKILL.md from .claude/skills/
     settingSources: ['project'],
     // Only allow the Skill tool - no file system access
@@ -94,7 +104,11 @@ export async function* processInstruction(
 
 Student says: "${instruction}"
 
-Respond with valid JSON following the math-scribe skill format.`;
+Your task is to respond *only* with a single, valid JSON object in a markdown code block.
+The JSON object MUST conform to the format specified in the 'math-scribe' skill.
+Any other format or explanatory text outside the JSON block is forbidden.
+
+Respond now.`;
 
   try {
     for await (const message of query({
