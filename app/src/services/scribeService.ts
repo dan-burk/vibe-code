@@ -1,7 +1,7 @@
 // WebSocket Scribe Service - connects to Math Scribe backend
 // Replaces mockScribe.ts when using the real backend
 
-import type { ScribeResponse, WorkspaceItem, GraphState } from '../types/components'
+import type { ScribeResponse, WorkspaceItem, GraphState, ConversationMessage } from '../types/components'
 
 // Message types matching backend
 interface ServerMessage {
@@ -25,9 +25,9 @@ interface WorkspaceState {
   graphState: GraphState
 }
 
-interface ConversationMessage {
-  role: 'user' | 'assistant'
-  content: string
+// Convert app roles to API roles for backend communication
+function convertToApiRole(role: 'student' | 'scribe'): 'user' | 'assistant' {
+  return role === 'student' ? 'user' : 'assistant'
 }
 
 type MessageHandler = (message: ServerMessage) => void
@@ -220,7 +220,10 @@ class ScribeService {
         payload: {
           instruction,
           workspaceState,
-          conversationHistory,
+          conversationHistory: conversationHistory.map(msg => ({
+            role: convertToApiRole(msg.role),
+            content: msg.content
+          })),
         },
       })
     )
