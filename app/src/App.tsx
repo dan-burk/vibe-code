@@ -3,6 +3,8 @@ import Layout from './components/layout/Layout'
 import Workspace from './components/ui/Workspace'
 import ConfirmationBar from './components/ui/ConfirmationBar'
 import InputBar from './components/ui/InputBar'
+import LoginModal from './components/auth/LoginModal'
+import { useAuth } from './contexts/AuthContext'
 import { scribeService } from './services/scribeService'
 import { exportWorkspaceToPDF } from './utils/pdfExport'
 import { INITIAL_GREETING, STORAGE_KEYS } from './utils/constants'
@@ -22,6 +24,9 @@ const initialGraphState: GraphState = {
 }
 
 function App() {
+  // Auth state
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth()
+
   // Theme state
   const [isDarkMode, setIsDarkMode] = useState(false)
 
@@ -305,6 +310,20 @@ function App() {
   const handleExportPDF = useCallback(async () => {
     await exportWorkspaceToPDF()
   }, [])
+
+  // Show loading while checking auth state
+  if (isAuthLoading) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+      </div>
+    )
+  }
+
+  // Show login modal if not authenticated
+  if (!isAuthenticated) {
+    return <LoginModal />
+  }
 
   return (
     <Layout

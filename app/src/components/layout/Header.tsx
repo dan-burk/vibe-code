@@ -1,6 +1,7 @@
-import { Moon, Sun, FileDown, User, Loader2 } from 'lucide-react'
+import { Moon, Sun, FileDown, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { APP_NAME } from '../../utils/constants'
+import UserMenu from '../auth/UserMenu'
 
 interface HeaderProps {
   isDarkMode: boolean
@@ -72,13 +73,8 @@ export default function Header({
               {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
 
-            {/* User Avatar (Placeholder) */}
-            <button
-              className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              title="Account"
-            >
-              <User className="w-5 h-5" />
-            </button>
+            {/* User Menu */}
+            <UserMenu />
           </div>
         </div>
       </div>
