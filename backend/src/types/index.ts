@@ -59,6 +59,12 @@ export interface WorkspaceItem {
   timestamp: Date;
 }
 
+// Conversation message for history tracking
+export interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 // WebSocket message types
 export interface ClientMessage {
   type: 'instruction' | 'confirm' | 'reject' | 'export_pdf' | 'new_session';
@@ -66,6 +72,7 @@ export interface ClientMessage {
   payload: {
     instruction?: string;
     workspaceState?: WorkspaceState;
+    conversationHistory?: ConversationMessage[];
   };
 }
 

@@ -2,7 +2,7 @@ import { query, type Options } from '@anthropic-ai/claude-agent-sdk';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import type { ScribeResponse, WorkspaceState } from '../types/index.js';
+import type { ScribeResponse, WorkspaceState, ConversationMessage } from '../types/index.js';
 
 // ESM directory resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -91,12 +91,26 @@ function formatWorkspaceContext(workspaceState: WorkspaceState): string {
 }
 
 /**
+ * Formats conversation history for inclusion in the prompt.
+ */
+function formatConversationHistory(conversationHistory: ConversationMessage[]): string {
+  if (!conversationHistory || conversationHistory.length === 0) {
+    return 'No previous conversation.';
+  }
+
+  return conversationHistory
+    .map((msg) => `${msg.role === 'user' ? 'Student' : 'Scribe'}: ${msg.content}`)
+    .join('\n');
+}
+
+/**
  * Process a student instruction using the Claude Agent SDK.
  * Yields ScribeResponse objects as Claude responds.
  */
 export async function* processInstruction(
   instruction: string,
   workspaceState: WorkspaceState,
+  conversationHistory: ConversationMessage[] = [],
   sessionId?: string
 ): AsyncGenerator<ScribeResponse> {
   const workspaceContext = formatWorkspaceContext(workspaceState);
@@ -137,6 +151,10 @@ ONLY output:
 <current-workspace>
 ${workspaceContext}
 </current-workspace>
+
+<conversation-history>
+${formatConversationHistory(conversationHistory)}
+</conversation-history>
 
 <student-says>
 ${instruction}

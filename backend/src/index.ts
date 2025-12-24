@@ -159,9 +159,11 @@ wss.on('connection', async (ws: WebSocket) => {
 
           // Process instruction with Claude
           let lastResponse: ScribeResponse | null = null;
+          const conversationHistory = message.payload.conversationHistory || [];
           for await (const response of processInstruction(
             message.payload.instruction,
             currentSession.workspaceState,
+            conversationHistory,
             currentSession.agentSessionId
           )) {
             lastResponse = response;

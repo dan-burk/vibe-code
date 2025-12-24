@@ -237,6 +237,7 @@ function App() {
         scribeService.sendInstruction(
           instruction,
           { items: workspaceItems, graphState },
+          conversationHistory,
           (response) => {
             // Process each response as it streams in
             processScribeResponse(response)
@@ -265,7 +266,7 @@ function App() {
         setIsLoading(false)
       }
     },
-    [isLoading, workspaceItems, graphState, processScribeResponse]
+    [isLoading, workspaceItems, graphState, conversationHistory, processScribeResponse]
   )
 
   // Handle confirmation (Yes)

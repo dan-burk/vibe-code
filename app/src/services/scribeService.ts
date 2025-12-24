@@ -25,6 +25,11 @@ interface WorkspaceState {
   graphState: GraphState
 }
 
+interface ConversationMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
 type MessageHandler = (message: ServerMessage) => void
 type ConnectionHandler = () => void
 type ErrorHandler = (error: Event | Error) => void
@@ -156,6 +161,7 @@ class ScribeService {
   sendInstruction(
     instruction: string,
     workspaceState: WorkspaceState,
+    conversationHistory: ConversationMessage[],
     onResponse: (response: ScribeResponse) => void,
     onFinish: () => void,
     onError: (error: Error) => void
@@ -166,6 +172,7 @@ class ScribeService {
           this.sendInstruction(
             instruction,
             workspaceState,
+            conversationHistory,
             onResponse,
             onFinish,
             onError
@@ -213,6 +220,7 @@ class ScribeService {
         payload: {
           instruction,
           workspaceState,
+          conversationHistory,
         },
       })
     )
