@@ -10,6 +10,7 @@ interface LayoutProps {
   isFinished: boolean
   showHeader?: boolean
   showFooter?: boolean
+  onSignInClick?: () => void
 }
 
 export default function Layout({
@@ -20,6 +21,7 @@ export default function Layout({
   isFinished,
   showHeader = true,
   showFooter = true,
+  onSignInClick,
 }: LayoutProps) {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors">
@@ -29,6 +31,7 @@ export default function Layout({
           toggleDarkMode={toggleDarkMode}
           onExportPDF={onExportPDF}
           isFinished={isFinished}
+          onSignInClick={onSignInClick}
         />
       )}
 

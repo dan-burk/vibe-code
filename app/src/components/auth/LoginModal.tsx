@@ -1,7 +1,12 @@
 import { useState } from 'react'
+import { X } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 
-export default function LoginModal() {
+interface LoginModalProps {
+  onClose: () => void
+}
+
+export default function LoginModal({ onClose }: LoginModalProps) {
   const { signIn, isLoading } = useAuth()
   const [error, setError] = useState<string | null>(null)
 
@@ -9,15 +14,32 @@ export default function LoginModal() {
     try {
       setError(null)
       await signIn()
+      onClose()
     } catch (err) {
       console.error('Failed to sign in:', err)
       setError('Failed to sign in. Please try again.')
     }
   }
 
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose()
+    }
+  }
+
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full mx-4 p-8">
+    <div
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+      onClick={handleBackdropClick}
+    >
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full mx-4 p-8 relative">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          title="Close"
+        >
+          <X className="w-5 h-5" />
+        </button>
         <div className="text-center">
           <div className="w-20 h-20 mx-auto bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
             <span className="text-white font-bold text-3xl">M</span>

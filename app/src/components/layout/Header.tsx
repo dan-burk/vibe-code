@@ -8,6 +8,7 @@ interface HeaderProps {
   toggleDarkMode: () => void
   onExportPDF: () => Promise<void>
   isFinished: boolean
+  onSignInClick?: () => void
 }
 
 export default function Header({
@@ -15,6 +16,7 @@ export default function Header({
   toggleDarkMode,
   onExportPDF,
   isFinished,
+  onSignInClick,
 }: HeaderProps) {
   const [isExporting, setIsExporting] = useState(false)
 
@@ -74,7 +76,7 @@ export default function Header({
             </button>
 
             {/* User Menu */}
-            <UserMenu />
+            <UserMenu onSignInClick={onSignInClick} />
           </div>
         </div>
       </div>

@@ -1,8 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
-import { LogOut } from 'lucide-react'
+import { LogOut, User } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 
-export default function UserMenu() {
+interface UserMenuProps {
+  onSignInClick?: () => void
+}
+
+export default function UserMenu({ onSignInClick }: UserMenuProps) {
   const { user, isAuthenticated, isLoading, logOut } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -24,7 +28,15 @@ export default function UserMenu() {
   }
 
   if (!isAuthenticated || !user) {
-    return null
+    return (
+      <button
+        onClick={onSignInClick}
+        className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        title="Sign in"
+      >
+        <User className="w-5 h-5" />
+      </button>
+    )
   }
 
   return (

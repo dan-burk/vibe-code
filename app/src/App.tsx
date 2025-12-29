@@ -30,6 +30,9 @@ function App() {
   // Theme state
   const [isDarkMode, setIsDarkMode] = useState(false)
 
+  // Sign-in modal state
+  const [showSignInModal, setShowSignInModal] = useState(false)
+
   // Workspace state
   const [workspaceItems, setWorkspaceItems] = useState<WorkspaceItem[]>([])
   const [graphState, setGraphState] = useState<GraphState>(initialGraphState)
@@ -225,6 +228,12 @@ function App() {
     (instruction: string) => {
       if (isLoading) return
 
+      // Check authentication - show sign-in modal if not authenticated
+      if (!isAuthenticated) {
+        setShowSignInModal(true)
+        return
+      }
+
       // Clear any existing confirmation message
       setConfirmationState('none')
 
@@ -271,7 +280,7 @@ function App() {
         setIsLoading(false)
       }
     },
-    [isLoading, workspaceItems, graphState, conversationHistory, processScribeResponse]
+    [isLoading, isAuthenticated, workspaceItems, graphState, conversationHistory, processScribeResponse]
   )
 
   // Handle confirmation (Yes)
@@ -320,18 +329,20 @@ function App() {
     )
   }
 
-  // Show login modal if not authenticated
-  if (!isAuthenticated) {
-    return <LoginModal />
-  }
-
   return (
-    <Layout
-      isDarkMode={isDarkMode}
-      toggleDarkMode={toggleDarkMode}
-      onExportPDF={handleExportPDF}
-      isFinished={isFinished}
-    >
+    <>
+      {/* Sign-in modal - shown when user tries to input without being authenticated */}
+      {showSignInModal && (
+        <LoginModal onClose={() => setShowSignInModal(false)} />
+      )}
+
+      <Layout
+        isDarkMode={isDarkMode}
+        toggleDarkMode={toggleDarkMode}
+        onExportPDF={handleExportPDF}
+        isFinished={isFinished}
+        onSignInClick={() => setShowSignInModal(true)}
+      >
       <div className="flex-1 flex flex-col w-full px-6 py-6">
         {/* Workspace - Main area for equations, graphs, and controls */}
         <Workspace
@@ -358,6 +369,7 @@ function App() {
         </Workspace>
       </div>
     </Layout>
+    </>
   )
 }
 
