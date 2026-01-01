@@ -210,12 +210,11 @@ function App() {
   }, [])
 
   // Connect to WebSocket on mount
+  // Note: Initial connection may fail but the service retries automatically
   useEffect(() => {
-    scribeService.connect().catch((error) => {
-      console.error('Failed to connect to backend:', error)
-      setConfirmationMessage(
-        "Couldn't connect to the server. Make sure the backend is running."
-      )
+    scribeService.connect().catch(() => {
+      // Silently handle initial connection error - the service will retry
+      // Errors during actual user interaction are handled in handleSubmit
     })
 
     return () => {
