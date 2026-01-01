@@ -51,6 +51,8 @@ firebase deploy --only hosting
 
 **Frontend URL:** https://math-scribe-3a4b6.web.app
 
+## Step 4: Check Logs
+gcloud run services logs read math-scribe-backend --region us-central1 --limit 50
 ---
 
 # Part 2: First-Time Setup & Troubleshooting
