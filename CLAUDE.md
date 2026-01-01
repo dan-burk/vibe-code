@@ -91,3 +91,25 @@ Each CLAUDE.md file knows its scope:
 - **CLAUDE.md files are hierarchical** - each knows its scope
 - **Templates are reference specs** - not rigid requirements
 - **The app folder is your workspace** - where implementation happens
+
+
+
+# Backend
+gcloud config set project math-scribe-3a4b6
+
+gcloud run deploy math-scribe-backend `
+  --source . `
+  --region us-central1 `
+  --allow-unauthenticated `
+  --set-env-vars ANTHROPIC_API_KEY=<my-api-key>
+
+### URL
+https://math-scribe-backend-bae5znb3dq-uc.a.run.app
+
+Put in the .env.production in in the frontend
+
+# Frontend
+firebase deploy --only hosting
+
+https://math-scribe-3a4b6.web.app
+

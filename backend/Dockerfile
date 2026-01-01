@@ -1,6 +1,24 @@
 # Math Scribe Backend
-# Includes Node.js, Claude Code CLI, and TeX Live for PDF generation
+# Includes Node.js and TeX Live for PDF generation
 
+FROM node:20-slim AS builder
+
+# Create app directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install ALL dependencies (including devDependencies for TypeScript build)
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Build TypeScript
+RUN npm run build
+
+# Production stage
 FROM node:20-slim
 
 # Install system dependencies
@@ -9,13 +27,9 @@ RUN apt-get update && apt-get install -y \
     texlive-latex-base \
     texlive-fonts-recommended \
     texlive-latex-extra \
-    # Required for Claude Code CLI
+    # curl for health checks
     curl \
-    git \
     && rm -rf /var/lib/apt/lists/*
-
-# Install Claude Code CLI globally
-RUN npm install -g @anthropic-ai/claude-code
 
 # Create app directory
 WORKDIR /app
@@ -23,14 +37,14 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --production
+# Install production dependencies only
+RUN npm ci --omit=dev
 
-# Copy source code
-COPY . .
+# Copy built files from builder stage
+COPY --from=builder /app/dist ./dist
 
-# Build TypeScript
-RUN npm run build
+# Copy skill files for the agent
+COPY .claude ./.claude
 
 # Set environment
 ENV NODE_ENV=production

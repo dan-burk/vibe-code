@@ -99,4 +99,4 @@ To add a new template:
 
 ## License
 
-MIT License - See LICENSE file for details
+Propietary License

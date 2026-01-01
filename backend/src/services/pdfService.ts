@@ -56,8 +56,8 @@ function generateGraphLatex(graphState: GraphState): string {
   ];
 
   for (const point of points) {
-    const label = point.label ? ` (labeled ``${escapeLatex(point.label)}\\'\\')` : '';
-    graphLines.push(`  \\item Point at $(${point.x}, ${point.y})$${label}`);
+    const labelText = point.label ? ' (labeled "' + escapeLatex(point.label) + '")' : '';
+    graphLines.push('  \\item Point at $(' + point.x + ', ' + point.y + ')$' + labelText);
   }
 
   for (const line of lines) {
