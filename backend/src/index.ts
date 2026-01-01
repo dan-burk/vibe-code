@@ -102,6 +102,13 @@ function getOrCreateSession(sessionId?: string): Session {
 wss.on('connection', async (ws: WebSocket) => {
   console.log('Client connected');
 
+  // Set up ping/pong keep-alive to prevent Cloud Run idle timeout
+  const pingInterval = setInterval(() => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.ping();
+    }
+  }, 25000); // Ping every 25 seconds
+
   // Create new session and send init message
   const session = getOrCreateSession();
 
@@ -124,10 +131,12 @@ wss.on('connection', async (ws: WebSocket) => {
   ws.on('message', async (data: Buffer) => {
     try {
       const message: ClientMessage = JSON.parse(data.toString());
+      console.log('Received message type:', message.type);
       const currentSession = getOrCreateSession(message.sessionId);
 
       switch (message.type) {
         case 'instruction': {
+          console.log('Processing instruction:', message.payload.instruction?.substring(0, 50));
           if (!message.payload.instruction) {
             sendMessage(ws, {
               type: 'error',
@@ -252,10 +261,16 @@ wss.on('connection', async (ws: WebSocket) => {
 
   ws.on('close', () => {
     console.log('Client disconnected');
+    clearInterval(pingInterval);
   });
 
   ws.on('error', (error) => {
     console.error('WebSocket error:', error);
+    clearInterval(pingInterval);
+  });
+
+  ws.on('pong', () => {
+    // Connection is alive - pong received from client
   });
 });
 

@@ -163,10 +163,15 @@ ${instruction}
 JSON response:`;
 
   try {
+    console.log('Calling Claude Agent SDK query()...');
+    console.log('ANTHROPIC_API_KEY present:', !!process.env.ANTHROPIC_API_KEY);
+    console.log('API key prefix:', process.env.ANTHROPIC_API_KEY?.substring(0, 10) + '...');
+
     for await (const message of query({
       prompt,
       options,
     })) {
+      console.log('Received message from SDK:', message.type);
       // Handle different message types
       if (message.type === 'assistant' && message.message?.content) {
         for (const block of message.message.content) {
@@ -188,6 +193,8 @@ JSON response:`;
     yield {
       text: "I'm having trouble processing that. Could you try again?",
     };
+  } finally {
+    console.log('processInstruction generator finished');
   }
 }
 
