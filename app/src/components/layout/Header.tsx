@@ -37,9 +37,11 @@ export default function Header({
         <div className="flex justify-between items-center h-16">
           {/* Logo and Brand */}
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">M</span>
-            </div>
+            <img
+              src="/logo.png"
+              alt="Math Scribe Logo"
+              className="w-9 h-9 rounded-lg"
+            />
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
               {APP_NAME}
             </h1>
