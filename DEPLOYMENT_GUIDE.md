@@ -1,134 +1,190 @@
-# Deployment Instructions                                                      
-      172 +                                                                               
-      173 +## Architecture Overview                                                       
-      174 +                                                                               
-      175 +| Component | Service | Cost |                                                 
-      176 +|-----------|---------|------|                                                 
-      177 +| Frontend (React) | Firebase Hosting | Free tier |                            
-      178 +| Backend (Node.js + WebSocket) | Google Cloud Run | Pay-as-you-go |           
-      179 +| Auth | Firebase Auth | Free tier |                                           
-      180 +                                                                               
-      181 +## Prerequisites                                                               
-      182 +                                                                               
-      183 +```powershell                                                                  
-      184 +# Install Firebase CLI                                                         
-      185 +npm install -g firebase-tools                                                  
-      186 +                                                                               
-      187 +# Install Google Cloud CLI                                                     
-      188 +# https://cloud.google.com/sdk/docs/install                                    
-      189 +                                                                               
-      190 +# Login to both                                                                
-      191 +firebase login                                                                 
-      192 +gcloud auth login                                                              
-      193 +```                                                                            
-      194 +                                                                               
-      195 +## Quick Deploy Commands
-      196 +                                                                               
-      197 +### Backend (Cloud Run)                                                        
-      198 +```powershell                                                                  
-      199 +cd backend                                                                     
-      200 +gcloud run deploy math-scribe-backend --source . --region us-central1 --       
-          +allow-unauthenticated --set-env-vars ANTHROPIC_API_KEY=your-key-here           
-      201 +```                                                                            
-      202 +                                                                               
-      203 +### Frontend (Firebase Hosting)                                                
-      204 +```powershell                                                                  
-      205 +cd app                                                                         
-      206 +npm run build                                                                  
-      207 +firebase deploy --only hosting                                                 
-      208 +```                                                                            
-      209 +                                                                               
-      210 +### Get Backend URL                                                            
-      211 +```powershell                                                                  
-      212 +gcloud run services describe math-scribe-backend --region us-central1 --       
-          +format="value(status.url)"                                                     
-      213 +```                                                                            
-      214 +                                                                               
-      215 +## First-Time Setup                                                            
-      216 +                                                                               
-      217 +### 1. Set Google Cloud Project                                                
-      218 +```powershell                                                                  
-      219 +gcloud config set project math-scribe-3a4b6                                    
-      220 +```                                                                            
-      221 +                                                                               
-      222 +### 2. Enable Billing                                                          
-      223 +Cloud Run requires billing enabled (has generous free tier):                   
-      224 +https://console.cloud.google.com/billing/linkedaccount?project=math-scri       
-          +be-3a4b6                                                                       
-      225 +                                                                               
-      226 +### 3. Enable Required APIs                                                    
-      227 +When deploying, say "yes" to enable:                                           
-      228 +- `artifactregistry.googleapis.com`                                            
-      229 +- `cloudbuild.googleapis.com`                                                  
-      230 +- `run.googleapis.com`                                                         
-      231 +                                                                               
-      232 +### 4. Fix IAM Permissions (if needed)                                         
-      233 +If you get permission errors:                                                  
-      234 +```powershell                                                                  
-      235 +gcloud projects add-iam-policy-binding math-scribe-3a4b6 --member="servi       
-          +ceAccount:639915616844-compute@developer.gserviceaccount.com" --role="ro       
-          +les/storage.objectViewer"                                                      
-      236 +                                                                               
-      237 +gcloud projects add-iam-policy-binding math-scribe-3a4b6 --member="servi       
-          +ceAccount:639915616844-compute@developer.gserviceaccount.com" --role="ro       
-          +les/logging.logWriter"                                                         
-      238 +                                                                               
-      239 +gcloud projects add-iam-policy-binding math-scribe-3a4b6 --member="servi       
-          +ceAccount:639915616844-compute@developer.gserviceaccount.com" --role="ro       
-          +les/artifactregistry.writer"                                                   
-      240 +```                                                                            
-      241 +                                                                               
-      242 +## Deployment Workflow                                                         
-      243 +                                                                               
-      244 +1. **Deploy backend first** to get the Cloud Run URL                           
-      245 +2. **Update `app/.env.production`** with the WebSocket URL:                    
-      246 +   ```                                                                         
-      247 +   VITE_WS_URL=wss://math-scribe-backend-xxxxxx-uc.a.run.app/ws                
-      248 +   ```                                                                         
-      249 +   (Note: `wss://` not `https://`, and add `/ws` at the end)                   
-      250 +3. **Build and deploy frontend**                                               
-      251 +                                                                               
-      252 +## Troubleshooting                                                             
-      253 +                                                                               
-      254 +### Wrong Google Cloud Project                                                 
-      255 +```powershell                                                                  
-      256 +# Check current project                                                        
-      257 +gcloud config get-value project                                                
-      258 +                                                                               
-      259 +# Switch to correct project                                                    
-      260 +gcloud config set project math-scribe-3a4b6                                    
-      261 +```                                                                            
-      262 +                                                                               
-      263 +### Wrong Firebase Account                                                     
-      264 +```powershell                                                                  
-      265 +firebase login                                                                 
-      266 +firebase projects:list                                                         
-      267 +```                                                                            
-      268 +                                                                               
-      269 +### Build Fails in Cloud Run                                                   
-      270 +Check logs:                                                                    
-      271 +```powershell                                                                  
-      272 +gcloud run services logs read math-scribe-backend --region us-central1 -       
-          +-limit 50                                                                      
-      273 +```                                                                            
-      274 +                                                                               
-      275 +### Container Won't Start                                                      
-      276 +- Usually means the app is crashing                                            
-      277 +- Check logs for errors (missing env vars, missing files)                      
-      278 +- The `SKILL.md` file must be included (check `.dockerignore`)                 
-      279 +                                                                               
-      280 +### PowerShell Multi-line Commands                                             
-      281 +Use backticks (`) not backslashes (\), or put everything on one line.          
-      282 +                                                                               
-      283 +## URLs                                                                        
-      284 +                                                                               
-      285 +- **Frontend:** https://math-scribe-3a4b6.web.app                              
-      286 +- **Backend:** Run `gcloud run services describe` command above                
-      287 +- **Firebase Console:** https://console.firebase.google.com/project/math       
-          +-scribe-3a4b6                                                                  
-      288 +- **Cloud Run Console:** https://console.cloud.google.com/run?project=ma       
-          +th-scribe-3a4b6                                                                
-      289 +                             
+# Deployment Guide
 
+## Architecture Overview
 
-https://react.dev/blog/2025/12/11/denial-of-service-and-source-code-exposure-in-react-server-components
+| Component | Service | Cost |
+|-----------|---------|------|
+| Frontend (React) | Firebase Hosting | Free tier |
+| Backend (Node.js + WebSocket) | Google Cloud Run | Pay-as-you-go |
+| Auth | Firebase Auth | Free tier |
+
+---
+
+# Part 1: Quick Deploy
+
+Use these commands when your environment is already set up.
+
+## Step 1: Deploy Backend
+
+```powershell
+# Set the correct project
+gcloud config set project math-scribe-3a4b6
+
+# Deploy from backend directory
+cd backend
+gcloud run deploy math-scribe-backend `
+  --source . `
+  --region us-central1 `
+  --allow-unauthenticated `
+  --set-env-vars ANTHROPIC_API_KEY=<your-api-key>
+```
+
+**Backend URL:** https://math-scribe-backend-bae5znb3dq-uc.a.run.app
+
+## Step 2: Update Frontend Config
+
+Create or update `app/.env.production` with the backend WebSocket URL:
+
+```
+VITE_WS_URL=wss://math-scribe-backend-bae5znb3dq-uc.a.run.app/ws
+```
+
+Note: Use `wss://` (not `https://`) and add `/ws` at the end.
+
+## Step 3: Deploy Frontend
+
+```powershell
+cd app
+npm run build
+firebase deploy --only hosting
+```
+
+**Frontend URL:** https://math-scribe-3a4b6.web.app
+
+---
+
+# Part 2: First-Time Setup & Troubleshooting
+
+## Prerequisites
+
+### Install Required Tools
+
+```powershell
+# Install Firebase CLI
+npm install -g firebase-tools
+
+# Install Google Cloud CLI
+# Download from: https://cloud.google.com/sdk/docs/install
+
+# Login to both services
+firebase login
+gcloud auth login
+```
+
+## Initial Setup Steps
+
+### 1. Set Google Cloud Project
+
+```powershell
+gcloud config set project math-scribe-3a4b6
+```
+
+Verify the correct project:
+```powershell
+gcloud config get-value project
+```
+
+### 2. Enable Billing
+
+Cloud Run requires billing to be enabled (has a generous free tier):
+
+https://console.cloud.google.com/billing/linkedaccount?project=math-scribe-3a4b6
+
+### 3. Enable Required APIs
+
+When deploying, the CLI will prompt you to enable these APIs. Say "yes" to all:
+- `artifactregistry.googleapis.com`
+- `cloudbuild.googleapis.com`
+- `run.googleapis.com`
+
+### 4. Fix IAM Permissions (if needed)
+
+If you encounter permission errors during deployment, run these commands:
+
+```powershell
+gcloud projects add-iam-policy-binding math-scribe-3a4b6 `
+  --member="serviceAccount:639915616844-compute@developer.gserviceaccount.com" `
+  --role="roles/storage.objectViewer"
+
+gcloud projects add-iam-policy-binding math-scribe-3a4b6 `
+  --member="serviceAccount:639915616844-compute@developer.gserviceaccount.com" `
+  --role="roles/logging.logWriter"
+
+gcloud projects add-iam-policy-binding math-scribe-3a4b6 `
+  --member="serviceAccount:639915616844-compute@developer.gserviceaccount.com" `
+  --role="roles/artifactregistry.writer"
+```
+
+## Troubleshooting
+
+### Wrong Google Cloud Project
+
+Check which project you're using:
+```powershell
+gcloud config get-value project
+```
+
+Switch to the correct project:
+```powershell
+gcloud config set project math-scribe-3a4b6
+```
+
+### Wrong Firebase Account
+
+Verify you're logged in with the correct account:
+```powershell
+firebase login
+firebase projects:list
+```
+
+### Build Fails in Cloud Run
+
+View the build logs to diagnose issues:
+```powershell
+gcloud run services logs read math-scribe-backend --region us-central1 --limit 50
+```
+
+Common causes:
+- Missing dependencies in package.json
+- TypeScript compilation errors
+- Missing environment variables
+
+### Container Won't Start
+
+This usually means the app is crashing on startup. Check:
+- Missing environment variables (ANTHROPIC_API_KEY)
+- Missing files (check `.dockerignore` - SKILL.md must be included)
+- Runtime errors in index.ts
+
+View real-time logs:
+```powershell
+gcloud run services logs read math-scribe-backend --region us-central1 --limit 50
+```
+
+### PowerShell Multi-line Commands
+
+Use backticks (\`) to continue commands across lines:
+```powershell
+gcloud run deploy math-scribe-backend `
+  --source . `
+  --region us-central1
+```
+
+Or put everything on one line:
+```powershell
+gcloud run deploy math-scribe-backend --source . --region us-central1 --allow-unauthenticated
+```
+
+### Getting the Backend URL
+
+If you need to retrieve the deployed backend URL:
+```powershell
+gcloud run services describe math-scribe-backend --region us-central1 --format="value(status.url)"
+```
+
+## Useful Links
+
+- **Frontend:** https://math-scribe-3a4b6.web.app
+- **Backend:** https://math-scribe-backend-bae5znb3dq-uc.a.run.app
+- **Firebase Console:** https://console.firebase.google.com/project/math-scribe-3a4b6
+- **Cloud Run Console:** https://console.cloud.google.com/run?project=math-scribe-3a4b6

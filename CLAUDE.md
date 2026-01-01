@@ -94,22 +94,13 @@ Each CLAUDE.md file knows its scope:
 
 
 
-# Backend
-gcloud config set project math-scribe-3a4b6
+## Deployment
 
-gcloud run deploy math-scribe-backend `
-  --source . `
-  --region us-central1 `
-  --allow-unauthenticated `
-  --set-env-vars ANTHROPIC_API_KEY=<my-api-key>
+For deployment instructions, see **DEPLOYMENT_GUIDE.md** which contains:
+- **Part 1:** Quick 3-step deployment process
+- **Part 2:** First-time setup and troubleshooting
 
-### URL
-https://math-scribe-backend-bae5znb3dq-uc.a.run.app
-
-Put in the .env.production in in the frontend
-
-# Frontend
-firebase deploy --only hosting
-
-https://math-scribe-3a4b6.web.app
+**Quick Reference:**
+- Backend: https://math-scribe-backend-bae5znb3dq-uc.a.run.app
+- Frontend: https://math-scribe-3a4b6.web.app
 
