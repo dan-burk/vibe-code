@@ -1,20 +1,25 @@
 import { useState, KeyboardEvent } from 'react'
-import { Send, Loader2 } from 'lucide-react'
+import { Send, Loader2, RotateCcw } from 'lucide-react'
 
 interface InputBarProps {
   onSubmit: (instruction: string) => void
+  onReset?: () => void
   isLoading: boolean
   disabled?: boolean
   placeholder?: string
+  showReset?: boolean
 }
 
 export default function InputBar({
   onSubmit,
+  onReset,
   isLoading,
   disabled = false,
   placeholder = 'Type your instruction...',
+  showReset = false,
 }: InputBarProps) {
   const [input, setInput] = useState('')
+  const [showResetConfirm, setShowResetConfirm] = useState(false)
 
   const handleSubmit = () => {
     if (input.trim() && !isLoading && !disabled) {
@@ -30,9 +35,57 @@ export default function InputBar({
     }
   }
 
+  const handleResetClick = () => {
+    setShowResetConfirm(true)
+  }
+
+  const handleResetConfirm = () => {
+    setShowResetConfirm(false)
+    onReset?.()
+  }
+
+  const handleResetCancel = () => {
+    setShowResetConfirm(false)
+  }
+
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+      {/* Reset confirmation dialog */}
+      {showResetConfirm && (
+        <div className="mb-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+          <p className="text-sm text-amber-800 dark:text-amber-200 mb-2">
+            Start a new problem? This will clear all your current work.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={handleResetConfirm}
+              className="px-3 py-1.5 text-sm bg-amber-600 hover:bg-amber-700 text-white rounded transition-colors"
+            >
+              Yes, start new
+            </button>
+            <button
+              onClick={handleResetCancel}
+              className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-end gap-3">
+        {/* Reset button */}
+        {showReset && onReset && (
+          <button
+            onClick={handleResetClick}
+            disabled={isLoading}
+            className="flex-shrink-0 p-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-600 dark:text-gray-300 rounded-lg transition-colors"
+            title="New Problem"
+          >
+            <RotateCcw className="w-5 h-5" />
+          </button>
+        )}
+
         {/* Text input */}
         <div className="flex-1">
           <textarea

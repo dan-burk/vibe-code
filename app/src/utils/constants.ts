@@ -6,6 +6,9 @@ export const STORAGE_KEYS = {
   THEME: 'math_scribe_theme',
   WORKSPACE: 'math_scribe_workspace',
   GRAPH_STATE: 'math_scribe_graph',
+  CONVERSATION: 'math_scribe_conversation',
+  IS_FINISHED: 'math_scribe_finished',
+  SHOW_GRAPH: 'math_scribe_show_graph',
 } as const
 
 export const GRAPH_DEFAULTS = {

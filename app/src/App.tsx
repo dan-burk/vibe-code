@@ -23,6 +23,27 @@ const initialGraphState: GraphState = {
   functions: [],
 }
 
+// Helper to safely parse JSON from localStorage
+function loadFromStorage<T>(key: string, fallback: T): T {
+  try {
+    const saved = localStorage.getItem(key)
+    if (saved) {
+      return JSON.parse(saved)
+    }
+  } catch (e) {
+    console.warn(`Failed to load ${key} from localStorage:`, e)
+  }
+  return fallback
+}
+
+// Restore Date objects from parsed JSON (timestamps come back as strings)
+function restoreDates<T extends { timestamp: Date | string }>(items: T[]): T[] {
+  return items.map(item => ({
+    ...item,
+    timestamp: typeof item.timestamp === 'string' ? new Date(item.timestamp) : item.timestamp
+  }))
+}
+
 function App() {
   // Auth state
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth()
@@ -33,18 +54,28 @@ function App() {
   // Sign-in modal state
   const [showSignInModal, setShowSignInModal] = useState(false)
 
-  // Workspace state
-  const [workspaceItems, setWorkspaceItems] = useState<WorkspaceItem[]>([])
-  const [graphState, setGraphState] = useState<GraphState>(initialGraphState)
-  const [showGraph, setShowGraph] = useState(false)
-  const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([])
+  // Workspace state - restored from localStorage
+  const [workspaceItems, setWorkspaceItems] = useState<WorkspaceItem[]>(() =>
+    restoreDates(loadFromStorage(STORAGE_KEYS.WORKSPACE, []))
+  )
+  const [graphState, setGraphState] = useState<GraphState>(() =>
+    loadFromStorage(STORAGE_KEYS.GRAPH_STATE, initialGraphState)
+  )
+  const [showGraph, setShowGraph] = useState(() =>
+    loadFromStorage(STORAGE_KEYS.SHOW_GRAPH, false)
+  )
+  const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>(() =>
+    restoreDates(loadFromStorage(STORAGE_KEYS.CONVERSATION, []))
+  )
 
   // Interaction state
   const [isLoading, setIsLoading] = useState(false)
   const [confirmationState, setConfirmationState] = useState<ConfirmationState>('none')
   const [confirmationMessage, setConfirmationMessage] = useState(INITIAL_GREETING)
   const [lastResponse, setLastResponse] = useState<ScribeResponse | null>(null)
-  const [isFinished, setIsFinished] = useState(false)
+  const [isFinished, setIsFinished] = useState(() =>
+    loadFromStorage(STORAGE_KEYS.IS_FINISHED, false)
+  )
 
   // Load theme from localStorage on mount
   useEffect(() => {
@@ -57,6 +88,27 @@ function App() {
       document.documentElement.classList.add('dark')
     }
   }, [])
+
+  // Save workspace state to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.WORKSPACE, JSON.stringify(workspaceItems))
+  }, [workspaceItems])
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.GRAPH_STATE, JSON.stringify(graphState))
+  }, [graphState])
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.SHOW_GRAPH, JSON.stringify(showGraph))
+  }, [showGraph])
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.CONVERSATION, JSON.stringify(conversationHistory))
+  }, [conversationHistory])
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.IS_FINISHED, JSON.stringify(isFinished))
+  }, [isFinished])
 
   // Toggle dark mode
   const toggleDarkMode = useCallback(() => {
@@ -319,6 +371,26 @@ function App() {
     await exportWorkspaceToPDF()
   }, [])
 
+  // Handle reset (new problem)
+  const handleReset = useCallback(() => {
+    // Clear localStorage
+    localStorage.removeItem(STORAGE_KEYS.WORKSPACE)
+    localStorage.removeItem(STORAGE_KEYS.GRAPH_STATE)
+    localStorage.removeItem(STORAGE_KEYS.SHOW_GRAPH)
+    localStorage.removeItem(STORAGE_KEYS.CONVERSATION)
+    localStorage.removeItem(STORAGE_KEYS.IS_FINISHED)
+
+    // Reset all state
+    setWorkspaceItems([])
+    setGraphState(initialGraphState)
+    setShowGraph(false)
+    setConversationHistory([])
+    setIsFinished(false)
+    setConfirmationState('none')
+    setConfirmationMessage(INITIAL_GREETING)
+    setLastResponse(null)
+  }, [])
+
   // Show loading while checking auth state
   if (isAuthLoading) {
     return (
@@ -361,9 +433,11 @@ function App() {
           {/* Input Bar - Text input for instructions */}
           <InputBar
             onSubmit={handleSubmit}
+            onReset={handleReset}
             isLoading={isLoading}
             disabled={confirmationState === 'awaiting'}
             placeholder="Type your instruction..."
+            showReset={workspaceItems.length > 0 || conversationHistory.length > 0}
           />
         </Workspace>
       </div>
