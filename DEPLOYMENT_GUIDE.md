@@ -22,6 +22,7 @@ gcloud config set project math-scribe-3a4b6
 
 # Deploy from backend directory
 cd backend
+npm run build
 gcloud run deploy math-scribe-backend `
   --source . `
   --region us-central1 `

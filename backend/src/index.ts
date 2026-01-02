@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { v4 as uuidv4 } from 'uuid';
-import { processInstruction, startSession } from './services/agentService.js';
+import { processInstruction, getGreeting } from './services/agentService.js';
 import { generatePdf, checkPdflatex } from './services/pdfService.js';
 import type {
   ClientMessage,
@@ -99,15 +99,13 @@ function getOrCreateSession(sessionId?: string): Session {
 /**
  * Handle WebSocket connection
  */
-wss.on('connection', async (ws: WebSocket) => {
-  console.log('Client connected');
-
+wss.on('connection', (ws: WebSocket) => {
   // Set up ping/pong keep-alive to prevent Cloud Run idle timeout
   const pingInterval = setInterval(() => {
     if (ws.readyState === WebSocket.OPEN) {
       ws.ping();
     }
-  }, 25000); // Ping every 25 seconds
+  }, 25000);
 
   // Create new session and send init message
   const session = getOrCreateSession();
@@ -119,24 +117,20 @@ wss.on('connection', async (ws: WebSocket) => {
   });
 
   // Send initial greeting
-  for await (const response of startSession()) {
-    sendMessage(ws, {
-      type: 'scribe_response',
-      sessionId: session.id,
-      payload: response,
-    });
-  }
+  sendMessage(ws, {
+    type: 'scribe_response',
+    sessionId: session.id,
+    payload: getGreeting(),
+  });
 
   // Handle incoming messages
   ws.on('message', async (data: Buffer) => {
     try {
       const message: ClientMessage = JSON.parse(data.toString());
-      console.log('Received message type:', message.type);
       const currentSession = getOrCreateSession(message.sessionId);
 
       switch (message.type) {
         case 'instruction': {
-          console.log('Processing instruction:', message.payload.instruction?.substring(0, 50));
           if (!message.payload.instruction) {
             sendMessage(ws, {
               type: 'error',
@@ -172,11 +166,9 @@ wss.on('connection', async (ws: WebSocket) => {
           for await (const response of processInstruction(
             message.payload.instruction,
             currentSession.workspaceState,
-            conversationHistory,
-            currentSession.agentSessionId
+            conversationHistory
           )) {
             lastResponse = response;
-            console.log('Sending scribe_response payload:', JSON.stringify(response, null, 2));
             sendMessage(ws, {
               type: 'scribe_response',
               sessionId: currentSession.id,
@@ -236,13 +228,11 @@ wss.on('connection', async (ws: WebSocket) => {
           });
 
           // Send greeting for new session
-          for await (const response of startSession()) {
-            sendMessage(ws, {
-              type: 'scribe_response',
-              sessionId: newSession.id,
-              payload: response,
-            });
-          }
+          sendMessage(ws, {
+            type: 'scribe_response',
+            sessionId: newSession.id,
+            payload: getGreeting(),
+          });
           break;
         }
 
@@ -260,17 +250,11 @@ wss.on('connection', async (ws: WebSocket) => {
   });
 
   ws.on('close', () => {
-    console.log('Client disconnected');
     clearInterval(pingInterval);
   });
 
-  ws.on('error', (error) => {
-    console.error('WebSocket error:', error);
+  ws.on('error', () => {
     clearInterval(pingInterval);
-  });
-
-  ws.on('pong', () => {
-    // Connection is alive - pong received from client
   });
 });
 
@@ -281,7 +265,6 @@ setInterval(
     for (const [id, session] of sessions) {
       if (session.lastActivity < cutoff) {
         sessions.delete(id);
-        console.log(`Cleaned up session ${id}`);
       }
     }
   },
@@ -291,7 +274,5 @@ setInterval(
 // Start server
 const PORT = parseInt(process.env.PORT || '8080', 10);
 server.listen(PORT, () => {
-  console.log(`Math Scribe backend listening on port ${PORT}`);
-  console.log(`WebSocket endpoint: ws://localhost:${PORT}/ws`);
-  console.log(`Health check: http://localhost:${PORT}/health`);
+  console.log(`Math Scribe backend running on port ${PORT}`);
 });
