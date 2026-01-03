@@ -208,7 +208,7 @@ When the student indicates they are finished:
 ```json
 {
   "text": "All done! Your final answer is boxed. Is that correct, my Captain?",
-  "latex": "\\boxed{x = 4}",
+  "latex": "x = 4",
   "finished": true
 }
 ```

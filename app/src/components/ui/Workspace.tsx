@@ -104,9 +104,9 @@ export default function Workspace({
                     <div key={wsItem.id} className="workspace-item">
                       {wsItem.type === 'equation' ? (
                         <div
-                          className={`text-xl ${
+                          className={`text-sm ${
                             wsItem.isBoxed
-                              ? 'border-2 border-blue-500 dark:border-blue-400 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 inline-block'
+                              ? 'border border-blue-500 dark:border-blue-400 px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 inline-block'
                               : ''
                           }`}
                         >
