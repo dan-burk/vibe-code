@@ -106,7 +106,11 @@ Build and run with Docker:
 
 ```bash
 docker build -t math-scribe-backend .
-docker run -p 8080:8080 -e ANTHROPIC_API_KEY=your_key math-scribe-backend
+docker run -p 8080:8080 \
+  -e ANTHROPIC_API_KEY=your_key \
+  -e CLAUDE_MODEL=claude-sonnet-5 \
+  -e CLAUDE_MAX_TOKENS=8000 \
+  math-scribe-backend
 ```
 
 ## Cloud Run Deployment
@@ -126,7 +130,15 @@ docker run -p 8080:8080 -e ANTHROPIC_API_KEY=your_key math-scribe-backend
      --memory 1Gi \
      --timeout 300s \
      --session-affinity \
-     --set-secrets ANTHROPIC_API_KEY=anthropic-api-key:latest
+     --set-secrets ANTHROPIC_API_KEY=anthropic-api-key:latest \
+     --set-env-vars CLAUDE_MODEL=claude-sonnet-5,CLAUDE_MAX_TOKENS=8000
+   ```
+
+   `CLAUDE_MODEL` / `CLAUDE_MAX_TOKENS` are required env vars (startup fails without them).
+   Swap models without a rebuild:
+   ```bash
+   gcloud run services update math-scribe-backend --region us-central1 \
+     --update-env-vars CLAUDE_MODEL=claude-opus-5
    ```
 
 ## Architecture

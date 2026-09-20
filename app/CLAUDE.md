@@ -197,7 +197,7 @@ gcloud auth login
 ### Backend (Cloud Run)
 ```powershell
 cd backend
-gcloud run deploy math-scribe-backend --source . --region us-central1 --allow-unauthenticated --set-env-vars ANTHROPIC_API_KEY=your-key-here
+gcloud run deploy math-scribe-backend --source . --region us-central1 --allow-unauthenticated --set-env-vars ANTHROPIC_API_KEY=your-key-here,CLAUDE_MODEL=claude-sonnet-5,CLAUDE_MAX_TOKENS=8000
 ```
 
 ### Frontend (Firebase Hosting)
@@ -274,7 +274,7 @@ gcloud run services logs read math-scribe-backend --region us-central1 --limit 5
 
 ### Container Won't Start
 - Usually means the app is crashing
-- Check logs for errors (missing env vars, missing files)
+- Check logs for errors (missing env vars: ANTHROPIC_API_KEY, CLAUDE_MODEL, CLAUDE_MAX_TOKENS; missing files)
 - The `SKILL.md` file must be included (check `.dockerignore`)
 
 ### PowerShell Multi-line Commands

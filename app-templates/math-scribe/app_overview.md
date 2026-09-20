@@ -202,8 +202,8 @@ export const transcribeMath = functions.https.onCall(async (data, context) => {
   });
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 2048,
+    model: process.env.CLAUDE_MODEL, // e.g. claude-sonnet-5, set at deploy time
+    max_tokens: 8000,
     system: SCRIBE_SYSTEM_PROMPT,
     messages: [
       {

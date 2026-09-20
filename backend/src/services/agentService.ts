@@ -11,6 +11,19 @@ const __dirname = dirname(__filename);
 // Initialize Anthropic client
 const anthropic = new Anthropic();
 
+// Model config is set at deploy time (see cloudbuild.yaml). Fail fast if missing.
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    console.error(`FATAL: ${name} is not set`);
+    process.exit(1);
+  }
+  return value;
+}
+
+const CLAUDE_MODEL = requireEnv('CLAUDE_MODEL');
+const MAX_TOKENS = parseInt(requireEnv('CLAUDE_MAX_TOKENS'), 10);
+
 // Load skill content at startup (fail fast if missing)
 let SKILL_CONTENT: string;
 try {
@@ -153,8 +166,8 @@ JSON response:`;
 
   try {
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4096,
+      model: CLAUDE_MODEL,
+      max_tokens: MAX_TOKENS,
       system: systemPrompt,
       messages: [
         {
