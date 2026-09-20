@@ -48,11 +48,13 @@ const SCRIBE_TOOL: Anthropic.Tool = {
       },
       latex: {
         type: 'string',
-        description: 'KaTeX string for an equation. Only when writing or updating math.',
+        description:
+          'KaTeX string. This is the DEFAULT way to record anything the student dictates, including a bare point like "(2, 1)".',
       },
       graph: {
         type: 'object',
-        description: 'Graph command. Only when modifying the graph.',
+        description:
+          'Graph command. ONLY when the student used an explicit graphing word (plot, graph, draw, put a dot). A bare "point 2,1" is written with latex instead - do not plot it.',
         properties: {
           action: {
             type: 'string',
