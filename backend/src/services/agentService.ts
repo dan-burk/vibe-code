@@ -34,38 +34,55 @@ try {
   process.exit(1);
 }
 
-/**
- * Parses Claude's JSON response into a ScribeResponse object.
- * The SKILL.md instructs Claude to output valid JSON in a specific format.
- * This function enforces that format.
- */
-function parseScribeResponse(text: string): ScribeResponse {
-  try {
-    const codeBlockMatch = text.match(/```json\n([\s\S]*?)\n```/);
-    if (codeBlockMatch && codeBlockMatch[1]) {
-      const jsonString = codeBlockMatch[1];
-      const parsed = JSON.parse(jsonString);
-
-      // Check for the standard ScribeResponse format
-      if (parsed.text || parsed.latex || (parsed.graph && typeof parsed.graph === 'object')) {
-        return {
-          text: parsed.text || '',
-          latex: parsed.latex,
-          graph: parsed.graph,
-          finished: parsed.finished,
-        };
-      }
-
-      // Fallback for unknown formats
-      return { text: `(Received unrecognized format: ${jsonString})` };
-    }
-  } catch (e) {
-    console.warn('Failed to parse JSON response:', e);
-  }
-
-  // Fallback: treat entire response as text if no valid JSON block is found
-  return { text: text.trim() };
-}
+// Tool the model must call to answer. Mirrors ScribeResponse, so we read the
+// structured input directly instead of parsing JSON out of the model's text.
+const SCRIBE_TOOL: Anthropic.Tool = {
+  name: 'scribe_response',
+  description: "Write down what the student dictated and reply to them. This is the only way to respond.",
+  input_schema: {
+    type: 'object',
+    properties: {
+      text: {
+        type: 'string',
+        description: 'What you say to the student.',
+      },
+      latex: {
+        type: 'string',
+        description: 'KaTeX string for an equation. Only when writing or updating math.',
+      },
+      graph: {
+        type: 'object',
+        description: 'Graph command. Only when modifying the graph.',
+        properties: {
+          action: {
+            type: 'string',
+            enum: ['add_point', 'add_line', 'add_function', 'remove', 'clear'],
+          },
+          data: {
+            type: 'object',
+            properties: {
+              x: { type: 'number' },
+              y: { type: 'number' },
+              label: { type: 'string' },
+              points: {
+                type: 'array',
+                items: { type: 'array', items: { type: 'number' } },
+              },
+              latex: { type: 'string' },
+              id: { type: 'string' },
+            },
+          },
+        },
+        required: ['action'],
+      },
+      finished: {
+        type: 'boolean',
+        description: "True when the student says they are done.",
+      },
+    },
+    required: ['text'],
+  },
+};
 
 /**
  * Formats the current workspace state as context for Claude.
@@ -104,16 +121,46 @@ function formatWorkspaceContext(workspaceState: WorkspaceState): string {
 }
 
 /**
- * Formats conversation history for inclusion in the prompt.
+ * Builds an alternating messages array from the conversation history, with the
+ * current instruction (plus workspace context) as the final user message.
+ * The frontend can send consecutive same-role messages, so they get merged.
  */
-function formatConversationHistory(conversationHistory: ConversationMessage[]): string {
-  if (!conversationHistory || conversationHistory.length === 0) {
-    return 'No previous conversation.';
+function buildMessages(
+  instruction: string,
+  workspaceContext: string,
+  conversationHistory: ConversationMessage[]
+): Anthropic.MessageParam[] {
+  const messages: ConversationMessage[] = [];
+
+  for (const msg of conversationHistory) {
+    // The array must start with a user message
+    if (messages.length === 0 && msg.role !== 'user') continue;
+
+    const last = messages[messages.length - 1];
+    if (last && last.role === msg.role) {
+      last.content = `${last.content}\n${msg.content}`;
+    } else {
+      messages.push({ role: msg.role, content: msg.content });
+    }
   }
 
-  return conversationHistory
-    .map((msg) => `${msg.role === 'user' ? 'Student' : 'Scribe'}: ${msg.content}`)
-    .join('\n');
+  // Workspace state describes the present, so it only goes on the final turn
+  const currentMessage = `<current-workspace>
+${workspaceContext}
+</current-workspace>
+
+<student-says>
+${instruction}
+</student-says>`;
+
+  const last = messages[messages.length - 1];
+  if (last && last.role === 'user') {
+    last.content = `${last.content}\n${currentMessage}`;
+  } else {
+    messages.push({ role: 'user', content: currentMessage });
+  }
+
+  return messages;
 }
 
 /**
@@ -135,55 +182,30 @@ ${SKILL_CONTENT}
 </scribe-role>
 
 <critical-format-requirements>
-Your entire response must be a single valid JSON code block. Nothing else.
-
-DO NOT output:
-- Any text before the JSON block
-- Any explanation of what you're doing
-- Any meta-commentary like "I need to apply..." or "As the scribe..."
-- Any text after the JSON block
-
-ONLY output:
-\`\`\`json
-{...your response...}
-\`\`\`
+Respond only by calling the scribe_response tool. Everything the student hears goes in the tool's text field - never narrate or explain outside the tool call.
 </critical-format-requirements>`;
-
-  // Build the user message with workspace context and instruction
-  const userMessage = `<current-workspace>
-${workspaceContext}
-</current-workspace>
-
-<conversation-history>
-${formatConversationHistory(conversationHistory)}
-</conversation-history>
-
-<student-says>
-${instruction}
-</student-says>
-
-JSON response:`;
 
   try {
     const message = await anthropic.messages.create({
       model: CLAUDE_MODEL,
       max_tokens: MAX_TOKENS,
       system: systemPrompt,
-      messages: [
-        {
-          role: 'user',
-          content: userMessage,
-        },
-      ],
+      tools: [SCRIBE_TOOL],
+      tool_choice: { type: 'tool', name: SCRIBE_TOOL.name },
+      messages: buildMessages(instruction, workspaceContext, conversationHistory),
     });
 
-    // Extract text from the response
-    for (const block of message.content) {
-      if (block.type === 'text') {
-        const response = parseScribeResponse(block.text);
-        yield response;
-      }
+    const toolUse = message.content.find(
+      (block): block is Anthropic.ToolUseBlock => block.type === 'tool_use'
+    );
+
+    if (!toolUse) {
+      console.warn('No tool_use block in response, stop_reason:', message.stop_reason);
+      yield { text: "Sorry, I didn't catch that. Could you say it again?" };
+      return;
     }
+
+    yield toolUse.input as ScribeResponse;
   } catch (error) {
     console.error('Anthropic API error:', error);
     yield {

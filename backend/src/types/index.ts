@@ -77,7 +77,7 @@ export interface ClientMessage {
 }
 
 export interface ServerMessage {
-  type: 'scribe_response' | 'error' | 'session_init' | 'pdf_ready' | 'processing';
+  type: 'scribe_response' | 'error' | 'session_init' | 'pdf_ready' | 'processing' | 'done';
   sessionId: string;
   payload: ScribeResponse | ErrorPayload | PdfPayload;
 }

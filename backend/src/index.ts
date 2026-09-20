@@ -161,14 +161,12 @@ wss.on('connection', (ws: WebSocket) => {
           });
 
           // Process instruction with Claude
-          let lastResponse: ScribeResponse | null = null;
           const conversationHistory = message.payload.conversationHistory || [];
           for await (const response of processInstruction(
             message.payload.instruction,
             currentSession.workspaceState,
             conversationHistory
           )) {
-            lastResponse = response;
             sendMessage(ws, {
               type: 'scribe_response',
               sessionId: currentSession.id,
@@ -176,14 +174,13 @@ wss.on('connection', (ws: WebSocket) => {
             });
           }
 
-          // Ensure a "finished" message is always sent
-          if (!lastResponse || !lastResponse.finished) {
-            sendMessage(ws, {
-              type: 'scribe_response',
-              sessionId: currentSession.id,
-              payload: { text: '', finished: true },
-            });
-          }
+          // End of stream. Separate from the scribe's `finished` flag, which means
+          // the student declared their final answer.
+          sendMessage(ws, {
+            type: 'done',
+            sessionId: currentSession.id,
+            payload: { text: '' } as ScribeResponse,
+          });
           break;
         }
 

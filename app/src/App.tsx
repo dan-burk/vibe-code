@@ -44,6 +44,36 @@ function restoreDates<T extends { timestamp: Date | string }>(items: T[]): T[] {
   }))
 }
 
+// Compact marker of what was actually scribed - kept out of the student's chat view,
+// folded into the content sent to the model by scribeService
+function describeScribed(response: ScribeResponse): string {
+  const parts: string[] = []
+  if (response.latex) parts.push(`wrote: ${response.latex}`)
+  if (response.graph) {
+    const graphActions = Array.isArray(response.graph) ? response.graph : [response.graph]
+    for (const { action, data } of graphActions) {
+      switch (action) {
+        case 'add_point':
+          parts.push(`plotted point (${data?.x}, ${data?.y})`)
+          break
+        case 'add_line':
+          parts.push(`drew line through ${data?.points?.map((p: [number, number]) => `(${p[0]}, ${p[1]})`).join(', ')}`)
+          break
+        case 'add_function':
+          parts.push(`graphed ${data?.latex}`)
+          break
+        case 'remove':
+          parts.push('removed the last graph element')
+          break
+        case 'clear':
+          parts.push('cleared the graph')
+          break
+      }
+    }
+  }
+  return parts.map((part) => `[${part}]`).join(' ')
+}
+
 function App() {
   // Auth state
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth()
@@ -136,6 +166,7 @@ function App() {
         id: generateId(),
         role: 'scribe',
         content: response.text,
+        scribed: describeScribed(response),
         timestamp: new Date(),
       };
       setConversationHistory((prev) => [...prev, assistantMessage]);
@@ -336,8 +367,15 @@ function App() {
 
   // Handle confirmation (Yes)
   const handleConfirm = useCallback(() => {
+    const reply = "Got it. What's next?"
     setConfirmationState('confirmed')
-    setConfirmationMessage("Got it. What's next?")
+    setConfirmationMessage(reply)
+    // Record the button answer so the model sees it on the next instruction
+    setConversationHistory((prev) => [
+      ...prev,
+      { id: generateId(), role: 'student', content: "Yes, that's correct.", timestamp: new Date() },
+      { id: generateId(), role: 'scribe', content: reply, timestamp: new Date() },
+    ])
   }, [])
 
   // Handle rejection (No / Undo)
@@ -362,8 +400,20 @@ function App() {
       })
     }
 
+    const reply = 'Okay, removed that. What should I write instead?'
     setConfirmationState('rejected')
-    setConfirmationMessage('Okay, removed that. What should I write instead?')
+    setConfirmationMessage(reply)
+    // Record the button answer so the model sees it on the next instruction
+    setConversationHistory((prev) => [
+      ...prev,
+      {
+        id: generateId(),
+        role: 'student',
+        content: "No, that's not what I said. Undo that.",
+        timestamp: new Date(),
+      },
+      { id: generateId(), role: 'scribe', content: reply, scribed: '[undid the last thing I scribed]', timestamp: new Date() },
+    ])
   }, [lastResponse])
 
   // Handle PDF export

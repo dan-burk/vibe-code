@@ -64,6 +64,7 @@ export interface ConversationMessage {
   id: string
   role: 'student' | 'scribe'
   content: string // What was said
+  scribed?: string // Compact marker of what was written/plotted - sent to the model, not shown to the student
   timestamp: Date
 }
 

@@ -5,7 +5,7 @@ import type { ScribeResponse, WorkspaceItem, GraphState, ConversationMessage } f
 
 // Message types matching backend
 interface ServerMessage {
-  type: 'scribe_response' | 'error' | 'session_init' | 'pdf_ready' | 'processing'
+  type: 'scribe_response' | 'error' | 'session_init' | 'pdf_ready' | 'processing' | 'done'
   sessionId: string
   payload: ScribeResponse | ErrorPayload | PdfPayload
 }
@@ -184,18 +184,16 @@ class ScribeService {
 
     const handler = (message: ServerMessage) => {
       if (message.type === 'scribe_response') {
-        const response = message.payload as ScribeResponse
-        onResponse(response)
-        if (response.finished) {
-          this.messageHandlers.delete(handler)
-          onFinish()
-        }
+        onResponse(message.payload as ScribeResponse)
+      } else if (message.type === 'done') {
+        this.messageHandlers.delete(handler)
+        onFinish()
       } else if (message.type === 'error') {
         this.messageHandlers.delete(handler)
         onError(new Error((message.payload as ErrorPayload).message))
       }
       // Note: We don't resolve/finish on 'processing'.
-      // The stream is considered finished only on `response.finished` or an error.
+      // The stream ends on an explicit 'done' message or an error.
     }
 
     this.messageHandlers.add(handler)
@@ -222,7 +220,7 @@ class ScribeService {
           workspaceState,
           conversationHistory: conversationHistory.map(msg => ({
             role: convertToApiRole(msg.role),
-            content: msg.content
+            content: msg.scribed ? `${msg.content} ${msg.scribed}` : msg.content
           })),
         },
       })
