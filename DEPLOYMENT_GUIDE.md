@@ -39,8 +39,6 @@ gcloud run services update math-scribe-backend --region us-central1 `
   --update-env-vars CLAUDE_MODEL=claude-opus-5
 ```
 
-Via Cloud Build, override the `_CLAUDE_MODEL` / `_CLAUDE_MAX_TOKENS` substitutions in `backend/cloudbuild.yaml`
-
 **Backend URL:** https://math-scribe-backend-bae5znb3dq-uc.a.run.app
 
 ## Step 2: Update Frontend Config
