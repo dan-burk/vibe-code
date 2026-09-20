@@ -131,14 +131,14 @@ docker run -p 8080:8080 \
      --timeout 300s \
      --session-affinity \
      --set-secrets ANTHROPIC_API_KEY=anthropic-api-key:latest \
-     --set-env-vars CLAUDE_MODEL=claude-sonnet-5,CLAUDE_MAX_TOKENS=8000
+     --set-env-vars "CLAUDE_MODEL=claude-sonnet-5,CLAUDE_MAX_TOKENS=8000"
    ```
 
    `CLAUDE_MODEL` / `CLAUDE_MAX_TOKENS` are required env vars (startup fails without them).
    Swap models without a rebuild:
    ```bash
    gcloud run services update math-scribe-backend --region us-central1 \
-     --update-env-vars CLAUDE_MODEL=claude-opus-5
+     --update-env-vars "CLAUDE_MODEL=claude-opus-5"
    ```
 
 ## Architecture

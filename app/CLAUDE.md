@@ -197,7 +197,7 @@ gcloud auth login
 ### Backend (Cloud Run)
 ```powershell
 cd backend
-gcloud run deploy math-scribe-backend --source . --region us-central1 --allow-unauthenticated --set-env-vars ANTHROPIC_API_KEY=your-key-here,CLAUDE_MODEL=claude-sonnet-5,CLAUDE_MAX_TOKENS=8000
+gcloud run deploy math-scribe-backend --source . --region us-central1 --allow-unauthenticated --set-env-vars "ANTHROPIC_API_KEY=your-key-here,CLAUDE_MODEL=claude-sonnet-5,CLAUDE_MAX_TOKENS=8000"
 ```
 
 ### Frontend (Firebase Hosting)

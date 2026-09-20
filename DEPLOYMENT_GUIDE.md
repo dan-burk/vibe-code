@@ -27,7 +27,7 @@ gcloud run deploy math-scribe-backend `
   --source . `
   --region us-central1 `
   --allow-unauthenticated `
-  --set-env-vars ANTHROPIC_API_KEY=<your-api-key>,CLAUDE_MODEL=claude-sonnet-5,CLAUDE_MAX_TOKENS=8000
+  --set-env-vars "ANTHROPIC_API_KEY=<your-api-key>,CLAUDE_MODEL=claude-sonnet-5,CLAUDE_MAX_TOKENS=8000"
 ```
 
 `CLAUDE_MODEL` and `CLAUDE_MAX_TOKENS` are required — the backend exits at startup if either is missing.
@@ -36,7 +36,7 @@ gcloud run deploy math-scribe-backend `
 
 ```powershell
 gcloud run services update math-scribe-backend --region us-central1 `
-  --update-env-vars CLAUDE_MODEL=claude-opus-5
+  --update-env-vars "CLAUDE_MODEL=claude-opus-5"
 ```
 
 **Backend URL:** https://math-scribe-backend-bae5znb3dq-uc.a.run.app
@@ -161,12 +161,7 @@ Common causes:
 - TypeScript compilation errors
 - Missing environment variables
 
-### Container Won't Start
 
-This usually means the app is crashing on startup. Check:
-- Missing environment variables (ANTHROPIC_API_KEY, CLAUDE_MODEL, CLAUDE_MAX_TOKENS)
-- Missing files (check `.dockerignore` - SKILL.md must be included)
-- Runtime errors in index.ts
 
 View real-time logs:
 ```powershell
