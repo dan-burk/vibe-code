@@ -14,7 +14,7 @@ This is **NOT** a tutoring app. It's an **accessibility accommodation** for stud
 - **Styling:** Tailwind CSS
 - **Equation Rendering:** KaTeX (react-katex)
 - **Graph Rendering:** Plotly.js (react-plotly.js)
-- **PDF Export:** jsPDF + html2canvas
+- **PDF Export:** browser print-to-PDF (print-only stylesheet, no PDF libraries)
 - **Icons:** Lucide React
 
 ## Project Structure
@@ -43,11 +43,10 @@ app/
 │   │   └── react-plotly.d.ts        # Plotly type declarations
 │   ├── utils/
 │   │   ├── constants.ts             # App constants
-│   │   ├── helpers.ts               # Helper functions
-│   │   └── pdfExport.ts             # PDF export functionality
+│   │   └── helpers.ts               # Helper functions
 │   ├── App.tsx                      # Main app component
 │   ├── main.tsx                     # Vite entry point
-│   └── globals.css                  # Global styles (Tailwind)
+│   └── globals.css                  # Global styles (Tailwind) + print stylesheet
 ├── index.html                       # HTML entry point
 ├── package.json                     # Dependencies
 ├── tsconfig.json                    # TypeScript config
@@ -82,6 +81,12 @@ Interactive Plotly.js graph:
 - Points, lines, and functions
 - Hover for coordinates
 
+### PrintSheet (`src/components/ui/PrintSheet.tsx`)
+Print-only black-on-white rendering behind "Export PDF": numbered steps with real
+KaTeX, narration, boxed final answer, and the graph. `App.handleExportPDF` mounts
+it, then calls `window.print()`. Layout lives in the `@media print` block in
+`globals.css`.
+
 ## State Management
 
 The app uses React useState for:
@@ -102,14 +107,12 @@ Local mock service for development without backend:
 Production service connecting to the backend:
 - WebSocket connection to `/ws` endpoint
 - Streams responses from Claude Agent SDK
-- Handles PDF export via backend
 
 ## Backend
 
 The backend is located in `/backend` and uses:
 - **Claude Agent SDK** for AI processing
 - **WebSocket** for real-time streaming
-- **pdflatex** for high-quality PDF generation
 
 See `/backend/README.md` for setup instructions.
 

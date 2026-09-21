@@ -1,5 +1,4 @@
 # Math Scribe Backend
-# Includes Node.js and TeX Live for PDF generation
 
 FROM node:20-slim AS builder
 
@@ -21,13 +20,8 @@ RUN npm run build
 # Production stage
 FROM node:20-slim
 
-# Install system dependencies
+# curl for health checks
 RUN apt-get update && apt-get install -y \
-    # TeX Live for PDF generation
-    texlive-latex-base \
-    texlive-fonts-recommended \
-    texlive-latex-extra \
-    # curl for health checks
     curl \
     && rm -rf /var/lib/apt/lists/*
 

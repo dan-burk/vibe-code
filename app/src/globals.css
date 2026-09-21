@@ -71,3 +71,140 @@
     @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Print sheet (see components/ui/PrintSheet.tsx)
+
+   The sheet is always plain black-on-white and never uses Tailwind `dark:`
+   variants, so "Export PDF" -> browser print -> "Save as PDF" produces a clean
+   document with real, selectable math instead of a screenshot.
+
+   Off-screen (not display:none) while on screen, so Plotly can measure itself
+   and render before the print dialog opens.
+--------------------------------------------------------------------------- */
+#print-sheet {
+  position: fixed;
+  top: 0;
+  left: -10000px;
+  width: 720px;
+  padding: 0;
+  background: #fff;
+  color: #000;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 12pt;
+  line-height: 1.5;
+}
+
+#print-sheet .print-header {
+  border-bottom: 1px solid #000;
+  margin-bottom: 18px;
+  padding-bottom: 8px;
+}
+
+#print-sheet .print-header h1 {
+  font-size: 18pt;
+  font-weight: 700;
+  margin: 0;
+}
+
+#print-sheet .print-header p {
+  font-size: 10pt;
+  color: #444;
+  margin: 2px 0 0;
+}
+
+/* The scribe's narration */
+#print-sheet .print-note {
+  margin: 10px 0;
+}
+
+/* What the student said */
+#print-sheet .print-said {
+  margin: 14px 0 6px;
+  font-style: italic;
+  color: #444;
+}
+
+#print-sheet .print-step {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 10px 0;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+#print-sheet .print-step-number {
+  flex: 0 0 auto;
+  min-width: 24px;
+  font-weight: 700;
+}
+
+#print-sheet .print-step-math {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+#print-sheet .print-step-final .print-step-math {
+  display: inline-block;
+  border: 2px solid #000;
+  border-radius: 4px;
+  padding: 6px 12px;
+}
+
+#print-sheet .print-final-label {
+  display: block;
+  font-size: 9pt;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #444;
+  margin-top: 4px;
+}
+
+/* KaTeX defaults to centered display math; a worked solution reads better flush left */
+#print-sheet .katex-display,
+#print-sheet .katex-display > .katex {
+  margin: 0;
+  text-align: left;
+}
+
+#print-sheet .print-graph {
+  margin-top: 24px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+#print-sheet .print-graph h2 {
+  font-size: 13pt;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+/* GraphCanvas' own wrapper carries a dark-mode border; force it light on paper */
+#print-sheet .print-graph > div {
+  border-color: #d1d5db !important;
+  background: #fff !important;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 18mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  /* The app itself never prints - only the sheet does */
+  #root {
+    display: none !important;
+  }
+
+  #print-sheet {
+    position: static;
+    left: auto;
+    width: auto;
+  }
+}

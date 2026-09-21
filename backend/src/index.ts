@@ -3,7 +3,6 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { v4 as uuidv4 } from 'uuid';
 import { processInstruction, getGreeting } from './services/agentService.js';
-import { generatePdf, checkPdflatex } from './services/pdfService.js';
 import type {
   ClientMessage,
   ServerMessage,
@@ -20,41 +19,11 @@ const app = express();
 app.use(express.json());
 
 // Health check endpoint
-app.get('/health', async (_req, res) => {
-  const pdflatexAvailable = await checkPdflatex();
+app.get('/health', (_req, res) => {
   res.json({
     status: 'ok',
-    pdflatex: pdflatexAvailable,
     sessions: sessions.size,
   });
-});
-
-// PDF download endpoint (for fallback if WebSocket fails)
-app.post('/api/pdf', async (req, res) => {
-  try {
-    const { workspaceItems, graphState, studentName } = req.body;
-    const pdfBase64 = await generatePdf({
-      workspaceItems,
-      graphState,
-      studentName,
-      date: new Date().toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      }),
-    });
-
-    const pdfBuffer = Buffer.from(pdfBase64, 'base64');
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="math-work-${new Date().toISOString().split('T')[0]}.pdf"`
-    );
-    res.send(pdfBuffer);
-  } catch (error) {
-    console.error('PDF generation error:', error);
-    res.status(500).json({ error: 'Failed to generate PDF' });
-  }
 });
 
 // Create HTTP server
@@ -181,37 +150,6 @@ wss.on('connection', (ws: WebSocket) => {
             sessionId: currentSession.id,
             payload: { text: '' } as ScribeResponse,
           });
-          break;
-        }
-
-        case 'export_pdf': {
-          try {
-            const pdfBase64 = await generatePdf({
-              workspaceItems: currentSession.workspaceState.items,
-              graphState: currentSession.workspaceState.graphState,
-              date: new Date().toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              }),
-            });
-
-            sendMessage(ws, {
-              type: 'pdf_ready',
-              sessionId: currentSession.id,
-              payload: {
-                pdfBase64,
-                filename: `math-work-${new Date().toISOString().split('T')[0]}.pdf`,
-              },
-            });
-          } catch (error) {
-            console.error('PDF generation error:', error);
-            sendMessage(ws, {
-              type: 'error',
-              sessionId: currentSession.id,
-              payload: { message: 'Failed to generate PDF' },
-            });
-          }
           break;
         }
 

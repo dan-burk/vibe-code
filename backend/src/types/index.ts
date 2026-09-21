@@ -67,7 +67,7 @@ export interface ConversationMessage {
 
 // WebSocket message types
 export interface ClientMessage {
-  type: 'instruction' | 'confirm' | 'reject' | 'export_pdf' | 'new_session';
+  type: 'instruction' | 'confirm' | 'reject' | 'new_session';
   sessionId?: string;
   payload: {
     instruction?: string;
@@ -77,9 +77,9 @@ export interface ClientMessage {
 }
 
 export interface ServerMessage {
-  type: 'scribe_response' | 'error' | 'session_init' | 'pdf_ready' | 'processing' | 'done';
+  type: 'scribe_response' | 'error' | 'session_init' | 'processing' | 'done';
   sessionId: string;
-  payload: ScribeResponse | ErrorPayload | PdfPayload;
+  payload: ScribeResponse | ErrorPayload;
 }
 
 export interface WorkspaceState {
@@ -92,11 +92,6 @@ export interface ErrorPayload {
   code?: string;
 }
 
-export interface PdfPayload {
-  pdfBase64: string;
-  filename: string;
-}
-
 // Session management
 export interface Session {
   id: string;
@@ -104,12 +99,4 @@ export interface Session {
   lastActivity: Date;
   workspaceState: WorkspaceState;
   agentSessionId?: string; // Claude Agent SDK session ID for resumption
-}
-
-// PDF generation request
-export interface PdfRequest {
-  workspaceItems: WorkspaceItem[];
-  graphState: GraphState;
-  studentName?: string;
-  date: string;
 }

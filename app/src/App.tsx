@@ -3,10 +3,10 @@ import Layout from './components/layout/Layout'
 import Workspace from './components/ui/Workspace'
 import ConfirmationBar from './components/ui/ConfirmationBar'
 import InputBar from './components/ui/InputBar'
+import PrintSheet from './components/ui/PrintSheet'
 import LoginModal from './components/auth/LoginModal'
 import { useAuth } from './contexts/AuthContext'
 import { scribeService } from './services/scribeService'
-import { exportWorkspaceToPDF } from './utils/pdfExport'
 import { INITIAL_GREETING, STORAGE_KEYS } from './utils/constants'
 import type {
   WorkspaceItem,
@@ -83,6 +83,9 @@ function App() {
 
   // Sign-in modal state
   const [showSignInModal, setShowSignInModal] = useState(false)
+
+  // True only while the print sheet is mounted for an export
+  const [isPrinting, setIsPrinting] = useState(false)
 
   // Workspace state - restored from localStorage
   const [workspaceItems, setWorkspaceItems] = useState<WorkspaceItem[]>(() =>
@@ -416,9 +419,18 @@ function App() {
     ])
   }, [lastResponse])
 
-  // Handle PDF export
+  // Handle PDF export - mount the print sheet, then hand off to the browser's
+  // own print-to-PDF (vector math, real pagination, no extra dependencies)
   const handleExportPDF = useCallback(async () => {
-    await exportWorkspaceToPDF()
+    setIsPrinting(true)
+    try {
+      // Give the sheet a frame to paint; Plotly needs to measure itself before
+      // the print dialog freezes the page
+      await new Promise((resolve) => setTimeout(resolve, 400))
+      window.print()
+    } finally {
+      setIsPrinting(false)
+    }
   }, [])
 
   // Handle reset (new problem)
@@ -455,6 +467,15 @@ function App() {
       {/* Sign-in modal - shown when user tries to input without being authenticated */}
       {showSignInModal && (
         <LoginModal onClose={() => setShowSignInModal(false)} />
+      )}
+
+      {/* Print-only rendering of the session - see PrintSheet.tsx */}
+      {isPrinting && (
+        <PrintSheet
+          items={workspaceItems}
+          conversationHistory={conversationHistory}
+          graphState={graphState}
+        />
       )}
 
       <Layout

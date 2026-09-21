@@ -5,19 +5,14 @@ import type { ScribeResponse, WorkspaceItem, GraphState, ConversationMessage } f
 
 // Message types matching backend
 interface ServerMessage {
-  type: 'scribe_response' | 'error' | 'session_init' | 'pdf_ready' | 'processing' | 'done'
+  type: 'scribe_response' | 'error' | 'session_init' | 'processing' | 'done'
   sessionId: string
-  payload: ScribeResponse | ErrorPayload | PdfPayload
+  payload: ScribeResponse | ErrorPayload
 }
 
 interface ErrorPayload {
   message: string
   code?: string
-}
-
-interface PdfPayload {
-  pdfBase64: string
-  filename: string
 }
 
 interface WorkspaceState {
@@ -225,64 +220,6 @@ class ScribeService {
         },
       })
     )
-  }
-
-  /**
-   * Request PDF export
-   */
-  async exportPdf(): Promise<{ pdfBase64: string; filename: string }> {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      await this.connect()
-    }
-
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error('PDF generation timed out'))
-      }, 120000) // 2 minute timeout for PDF
-
-      const handler = (message: ServerMessage) => {
-        if (message.type === 'pdf_ready') {
-          clearTimeout(timeout)
-          this.messageHandlers.delete(handler)
-          resolve(message.payload as PdfPayload)
-        } else if (message.type === 'error') {
-          clearTimeout(timeout)
-          this.messageHandlers.delete(handler)
-          reject(new Error((message.payload as ErrorPayload).message))
-        }
-      }
-
-      this.messageHandlers.add(handler)
-
-      this.ws!.send(
-        JSON.stringify({
-          type: 'export_pdf',
-          sessionId: this.sessionId,
-          payload: {},
-        })
-      )
-    })
-  }
-
-  /**
-   * Download PDF from base64
-   */
-  downloadPdf(pdfBase64: string, filename: string): void {
-    const binaryString = atob(pdfBase64)
-    const bytes = new Uint8Array(binaryString.length)
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i)
-    }
-    const blob = new Blob([bytes], { type: 'application/pdf' })
-    const url = URL.createObjectURL(blob)
-
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
   }
 
   /**

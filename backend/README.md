@@ -1,13 +1,14 @@
 # Math Scribe Backend
 
-Backend service for Math Scribe using Claude Agent SDK with WebSocket communication and LaTeX-based PDF generation.
+Backend service for Math Scribe using Claude Agent SDK with WebSocket communication.
+
+PDF export is handled entirely in the frontend via the browser's print-to-PDF (see `app/src/components/ui/PrintSheet.tsx`) - the backend has no PDF responsibilities.
 
 ## Prerequisites
 
 - Node.js 20+
 - Claude Code CLI installed (`npm install -g @anthropic-ai/claude-code`)
 - Anthropic API key
-- TeX Live (for PDF generation) - optional for development
 
 ## Setup
 
@@ -46,9 +47,6 @@ Connect for real-time communication with the scribe.
   }
 }
 
-// Request PDF export
-{ type: 'export_pdf', sessionId: 'uuid', payload: {} }
-
 // Start new session
 { type: 'new_session', payload: {} }
 ```
@@ -69,13 +67,6 @@ Connect for real-time communication with the scribe.
   }
 }
 
-// PDF ready
-{
-  type: 'pdf_ready',
-  sessionId: 'uuid',
-  payload: { pdfBase64: '...', filename: 'math-work-2024-01-15.pdf' }
-}
-
 // Error
 { type: 'error', sessionId: 'uuid', payload: { message: 'Error message' } }
 ```
@@ -86,18 +77,7 @@ Health check endpoint.
 
 ```bash
 curl http://localhost:8080/health
-# { "status": "ok", "pdflatex": true, "sessions": 0 }
-```
-
-### HTTP: `POST /api/pdf`
-
-Fallback PDF generation endpoint.
-
-```bash
-curl -X POST http://localhost:8080/api/pdf \
-  -H "Content-Type: application/json" \
-  -d '{"workspaceItems": [], "graphState": {"points": [], "lines": [], "functions": []}}' \
-  --output math-work.pdf
+# { "status": "ok", "sessions": 0 }
 ```
 
 ## Docker Deployment
@@ -149,8 +129,7 @@ docker run -p 8080:8080 \
 ├─────────────────────────────────────────────────────────────┤
 │  src/index.ts           - WebSocket server + Express        │
 │  src/services/                                               │
-│    ├── agentService.ts  - Claude Agent SDK integration      │
-│    └── pdfService.ts    - LaTeX → PDF generation            │
+│    └── agentService.ts  - Claude Agent SDK integration      │
 │  src/types/index.ts     - Shared TypeScript types           │
 ├─────────────────────────────────────────────────────────────┤
 │  .claude/skills/math-scribe/SKILL.md - Scribe behavior      │
