@@ -41,9 +41,11 @@ export default function LoginModal({ onClose }: LoginModalProps) {
           <X className="w-5 h-5" />
         </button>
         <div className="text-center">
-          <div className="w-20 h-20 mx-auto bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-            <span className="text-white font-bold text-3xl">M</span>
-          </div>
+          <img
+            src="/logo.png"
+            alt="Math Scribe Logo"
+            className="w-20 h-20 mx-auto rounded-2xl mb-6 shadow-lg"
+          />
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Math Scribe
           </h1>
