@@ -1,4 +1,6 @@
 # Vibe Code Project
+n> **⚠️ Deprecated.** Math Scribe has moved to [dan-burk/math-scribe](https://github.com/dan-burk/math-scribe) and is live at [danielburkhalter.dev/math-scribe](https://danielburkhalter.dev/math-scribe/). This repo is no longer maintained.
+
 
 A collection of web application templates and implementations for rapid prototyping and development.
 
